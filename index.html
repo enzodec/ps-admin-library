@@ -18,7 +18,7 @@ html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
 
-/* HEADER */
+/* ── HEADER ── */
 header{position:sticky;top:0;z-index:100;background:rgba(13,15,18,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
 .logo{display:flex;align-items:center;gap:10px;}
 .logo-icon{width:28px;height:28px;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;}
@@ -27,13 +27,20 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,15,18,.96);backdrop-
 .header-right{display:flex;align-items:center;gap:8px;}
 .pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--dim);}
 .pill b{color:var(--accent);}
+.gh-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;transition:all .15s;}
+.gh-status:hover{border-color:var(--accent);}
+.gh-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);}
+.gh-dot.connected{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.gh-dot.saving{background:var(--warn);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .btn-add{display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;transition:opacity .15s;}
 .btn-add:hover{opacity:.85;}
+.btn-add:disabled{opacity:.4;cursor:not-allowed;}
 
-/* LAYOUT */
+/* ── LAYOUT ── */
 .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 56px);position:relative;z-index:1;}
 
-/* SIDEBAR */
+/* ── SIDEBAR ── */
 aside{border-right:1px solid var(--border);padding:18px 12px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
 .s-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:0 6px;margin-bottom:6px;display:block;}
 .search-box{position:relative;margin-bottom:20px;}
@@ -51,14 +58,14 @@ aside{border-right:1px solid var(--border);padding:18px 12px;position:sticky;top
 .tag-btn{font-size:10px;padding:3px 7px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;}
 .tag-btn:hover,.tag-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08);}
 
-/* MAIN */
+/* ── MAIN ── */
 main{padding:22px 26px;}
 .main-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .main-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--bright);letter-spacing:-.02em;}
 .res-info{font-size:11px;color:var(--dim);}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;}
 
-/* CARD */
+/* ── CARD ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s;animation:up .22s ease both;}
 .card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.45);}
 @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -90,35 +97,48 @@ main{padding:22px 26px;}
 .code-inner{overflow:auto;max-height:420px;padding:12px 14px;background:rgba(0,0,0,.3);border-top:1px solid var(--border);}
 .code-inner pre{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:var(--text);white-space:pre;}
 
-/* EMPTY / LOADING */
+/* ── STATE MSGS ── */
 .state-msg{text-align:center;padding:80px 20px;color:var(--dim);}
 .state-msg .ico{font-size:32px;margin-bottom:10px;}
-.state-msg p{font-size:12px;}
+.state-msg p{font-size:12px;line-height:1.7;}
 
-/* ── MODAL ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+/* ── MODAL BASE ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:700px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:28px;position:relative;}
 .modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--bright);margin-bottom:20px;}
 .form-row{margin-bottom:14px;}
 .form-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;display:block;}
 .form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .2s;}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
 .form-select{cursor:pointer;}
-.form-textarea{min-height:180px;resize:vertical;line-height:1.65;}
+.form-textarea{min-height:200px;resize:vertical;line-height:1.7;}
 .form-hint{font-size:10px;color:var(--dim);margin-top:4px;}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-.btn-primary{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);align-items:center;}
+.btn-primary{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:6px;}
 .btn-primary:hover{opacity:.85;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
 .btn-secondary{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 16px;cursor:pointer;transition:all .15s;}
 .btn-secondary:hover{border-color:var(--text);color:var(--text);}
-.btn-danger-solid{background:var(--danger);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.btn-danger-solid{background:var(--danger);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 14px;cursor:pointer;transition:opacity .15s;margin-right:auto;}
 .btn-danger-solid:hover{opacity:.85;}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--bright);display:none;animation:slideIn .25s ease;}
+/* ── TOKEN MODAL ── */
+.token-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:480px;max-width:96vw;padding:28px;}
+.token-steps{margin:16px 0;display:flex;flex-direction:column;gap:8px;}
+.token-step{display:flex;align-items:flex-start;gap:10px;font-size:11px;color:var(--dim);line-height:1.6;}
+.token-step-n{width:20px;height:20px;border-radius:50%;background:var(--border2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.token-input-wrap{position:relative;}
+.token-input-wrap input{padding-right:70px;}
+.token-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;}
+.token-err{font-size:11px;color:var(--danger);margin-top:8px;display:none;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:400;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:11px;color:var(--bright);display:none;animation:slideIn .25s ease;max-width:320px;line-height:1.5;}
 .toast.ok{border-color:var(--ok);color:var(--ok);}
 .toast.err{border-color:var(--danger);color:var(--danger);}
+.toast.warn{border-color:var(--warn);color:var(--warn);}
 @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* scrollbar */
@@ -129,6 +149,7 @@ main{padding:22px 26px;}
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
   <div class="logo">
     <div class="logo-icon">PS</div>
@@ -136,11 +157,16 @@ main{padding:22px 26px;}
   </div>
   <div class="header-right">
     <div class="pill">Scripts : <b id="visCnt">0</b></div>
-    <button class="btn-add" onclick="openModal()">＋ Ajouter un script</button>
+    <div class="gh-status" id="ghStatus" onclick="openTokenModal()" title="Connexion GitHub">
+      <span class="gh-dot" id="ghDot"></span>
+      <span id="ghLabel">GitHub non connecté</span>
+    </div>
+    <button class="btn-add" id="btnAdd" onclick="openModal()">＋ Ajouter</button>
   </div>
 </header>
 
 <div class="layout">
+  <!-- SIDEBAR -->
   <aside>
     <div class="search-box">
       <span class="s-ico">🔍</span>
@@ -172,6 +198,7 @@ main{padding:22px 26px;}
     <div class="tag-cloud" id="tagCloud"></div>
   </aside>
 
+  <!-- MAIN -->
   <main>
     <div class="main-top">
       <div class="main-title" id="mainTitle">Tous les scripts</div>
@@ -181,21 +208,21 @@ main{padding:22px 26px;}
   </main>
 </div>
 
-<!-- MODAL AJOUT / ÉDITION -->
-<div class="overlay" id="overlay" onclick="closeModalIfBg(event)">
+<!-- ══ MODAL SCRIPT ══ -->
+<div class="overlay" id="overlayScript" onclick="closeModalIfBg(event,'overlayScript')">
   <div class="modal">
     <div class="modal-title" id="modalTitle">Nouveau script</div>
     <input type="hidden" id="editId">
 
     <div class="form-row">
       <label class="form-label">Titre *</label>
-      <input class="form-input" id="fTitle" placeholder="Ex: Créer un groupe de distribution">
+      <input class="form-input" id="fTitle" placeholder="Ex : Créer un groupe de distribution">
     </div>
     <div class="form-row">
       <label class="form-label">Description *</label>
-      <input class="form-input" id="fDesc" placeholder="Courte description de ce que fait le script">
+      <input class="form-input" id="fDesc" placeholder="Ce que fait le script en une phrase">
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="form-grid">
       <div class="form-row">
         <label class="form-label">Catégorie *</label>
         <select class="form-select" id="fCat">
@@ -217,9 +244,53 @@ main{padding:22px 26px;}
     </div>
 
     <div class="modal-actions">
-      <button class="btn-danger-solid" id="btnDelete" style="display:none;margin-right:auto" onclick="deleteScript()">🗑 Supprimer</button>
-      <button class="btn-secondary" onclick="closeModal()">Annuler</button>
-      <button class="btn-primary" onclick="saveScript()">💾 Enregistrer</button>
+      <button class="btn-danger-solid" id="btnDelete" style="display:none" onclick="deleteScript()">🗑 Supprimer</button>
+      <button class="btn-secondary" onclick="closeModal('overlayScript')">Annuler</button>
+      <button class="btn-primary" id="btnSave" onclick="saveScript()">
+        <span id="saveIcon">💾</span> <span id="saveLabel">Enregistrer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL TOKEN GITHUB ══ -->
+<div class="overlay" id="overlayToken" onclick="closeModalIfBg(event,'overlayToken')">
+  <div class="token-modal">
+    <div class="modal-title">🔑 Connexion GitHub</div>
+    <div style="font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:14px;">
+      Ton token est utilisé uniquement pour écrire dans ton repo.<br>
+      Il n'est <b style="color:var(--text)">jamais stocké</b> — tu le ressaisis à chaque session.
+    </div>
+
+    <div class="token-steps">
+      <div class="token-step">
+        <span class="token-step-n">1</span>
+        <span>Va sur GitHub → <b style="color:var(--accent)">Settings → Developer settings → Personal access tokens → Tokens (classic)</b></span>
+      </div>
+      <div class="token-step">
+        <span class="token-step-n">2</span>
+        <span>Clique <b style="color:var(--accent)">Generate new token (classic)</b> → coche uniquement <b style="color:var(--ok)">repo</b></span>
+      </div>
+      <div class="token-step">
+        <span class="token-step-n">3</span>
+        <span>Copie le token généré et colle-le ci-dessous</span>
+      </div>
+    </div>
+
+    <div class="form-row" style="margin-top:16px;">
+      <label class="form-label">Personal Access Token</label>
+      <div class="token-input-wrap">
+        <input class="form-input" id="tokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+        <button class="token-toggle" onclick="toggleTokenVis()">afficher</button>
+      </div>
+      <div class="token-err" id="tokenErr">Token invalide ou accès refusé.</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('overlayToken')">Annuler</button>
+      <button class="btn-primary" id="btnConnect" onclick="connectGitHub()">
+        <span id="connectIcon">🔗</span> <span id="connectLabel">Se connecter</span>
+      </button>
     </div>
   </div>
 </div>
@@ -227,147 +298,257 @@ main{padding:22px 26px;}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- INSTRUCTIONS GITHUB PANEL -->
-<div id="githubPanel" style="display:none;position:fixed;bottom:24px;left:24px;z-index:150;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:18px 20px;max-width:360px;font-size:11px;line-height:1.7;">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--bright);margin-bottom:10px;">📋 Synchroniser vers GitHub</div>
-  <div style="color:var(--dim);margin-bottom:12px;">Copie le JSON ci-dessous et remplace le contenu de <code style="color:var(--accent)">scripts.json</code> dans ton repo GitHub.</div>
-  <textarea id="jsonExport" readonly style="width:100%;height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;resize:none;outline:none;"></textarea>
-  <div style="display:flex;gap:8px;margin-top:10px;">
-    <button class="btn-primary" style="flex:1" onclick="copyJson()">⎘ Copier le JSON</button>
-    <button class="btn-secondary" onclick="document.getElementById('githubPanel').style.display='none'">✕</button>
-  </div>
-</div>
-
 <script>
-// ── CONFIG ──────────────────────────────────────────
-// Remplace cette URL par ton raw GitHub URL après déploiement
-// Ex: https://raw.githubusercontent.com/TON_USER/ps-admin-library/main/scripts.json
-const SCRIPTS_URL = './scripts.json';
+// ══════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════
+const GH_USER   = 'enzodec';
+const GH_REPO   = 'ps-admin-library';
+const GH_FILE   = 'scripts.json';
+const GH_BRANCH = 'main';
+const RAW_URL   = 'https://raw.githubusercontent.com/' + GH_USER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + GH_FILE;
+const API_URL   = 'https://api.github.com/repos/' + GH_USER + '/' + GH_REPO + '/contents/' + GH_FILE;
 
-// ── STATE ────────────────────────────────────────────
-let DB      = [];
-let curCat  = 'all';
-let curTag  = '';
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let DB       = [];
+let ghToken  = '';      // jamais stocké côté client persistent
+let fileSha  = '';      // SHA du fichier courant (requis par l'API GitHub pour écrire)
+let curCat   = 'all';
+let curTag   = '';
 
-// ── BOOT ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function () {
   await loadScripts();
   setupSidebar();
   render();
+  document.getElementById('q').addEventListener('input', render);
+  document.querySelectorAll('.cat-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { setCat(btn); });
+  });
 });
 
+// ══════════════════════════════════════════════════
+// CHARGEMENT SCRIPTS (lecture publique, pas de token)
+// ══════════════════════════════════════════════════
 async function loadScripts() {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '<div class="state-msg"><div class="ico">⏳</div><p>Chargement des scripts...</p></div>';
+  showGridMsg('⏳', 'Chargement des scripts...');
   try {
-    const r = await fetch(SCRIPTS_URL + '?t=' + Date.now());
+    // Lecture via API pour récupérer le SHA en même temps
+    const r = await fetch(API_URL, {
+      headers: { 'Accept': 'application/vnd.github+json' }
+    });
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    DB = await r.json();
-  } catch (e) {
-    grid.innerHTML = '<div class="state-msg"><div class="ico">⚠️</div><p>Impossible de charger scripts.json<br><small>' + e.message + '</small></p></div>';
-    DB = [];
+    const meta = await r.json();
+    fileSha = meta.sha;
+    DB = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+  } catch(e) {
+    // Fallback lecture brute (repo public)
+    try {
+      const r2 = await fetch(RAW_URL + '?t=' + Date.now());
+      if (!r2.ok) throw new Error('HTTP ' + r2.status);
+      DB = await r2.json();
+    } catch(e2) {
+      showGridMsg('⚠️', 'Impossible de charger scripts.json<br><small>' + e2.message + '</small>');
+      DB = [];
+    }
   }
 }
 
-// ── SIDEBAR ──────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// SAUVEGARDE GITHUB (nécessite token)
+// ══════════════════════════════════════════════════
+async function saveToGitHub(msg) {
+  if (!ghToken) { openTokenModal(); return false; }
+
+  setGhStatus('saving', 'Sauvegarde...');
+
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
+
+  const body = {
+    message: msg || 'Update scripts.json via PS Admin Library',
+    content: content,
+    sha: fileSha,
+    branch: GH_BRANCH
+  };
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + ghToken,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.message || 'HTTP ' + r.status);
+    }
+
+    const data = await r.json();
+    fileSha = data.content.sha;  // mise à jour du SHA pour le prochain commit
+    setGhStatus('connected', 'enzodec/ps-admin-library');
+    return true;
+  } catch(e) {
+    setGhStatus('connected', 'enzodec/ps-admin-library');
+    toast('Erreur GitHub : ' + e.message, 'err');
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// TOKEN MODAL
+// ══════════════════════════════════════════════════
+function openTokenModal() {
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('tokenErr').style.display = 'none';
+  document.getElementById('overlayToken').classList.add('open');
+}
+
+function toggleTokenVis() {
+  const inp = document.getElementById('tokenInput');
+  const btn = inp.nextElementSibling;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'masquer'; }
+  else { inp.type = 'password'; btn.textContent = 'afficher'; }
+}
+
+async function connectGitHub() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) return;
+
+  setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', true, '🔗', 'Vérification...');
+  document.getElementById('tokenErr').style.display = 'none';
+
+  // Vérification du token via l'API
+  try {
+    const r = await fetch(API_URL, {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const meta = await r.json();
+    fileSha  = meta.sha;
+    ghToken  = token;
+    DB = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+
+    setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', false, '🔗', 'Se connecter');
+    closeModal('overlayToken');
+    setGhStatus('connected', 'enzodec/ps-admin-library');
+    setupSidebar();
+    render();
+    toast('Connecté à GitHub ✔', 'ok');
+  } catch(e) {
+    setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', false, '🔗', 'Se connecter');
+    document.getElementById('tokenErr').style.display = 'block';
+  }
+}
+
+function setGhStatus(state, label) {
+  const dot   = document.getElementById('ghDot');
+  const lbl   = document.getElementById('ghLabel');
+  dot.className = 'gh-dot ' + (state === 'connected' ? 'connected' : state === 'saving' ? 'saving' : '');
+  lbl.textContent = label;
+}
+
+// ══════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════
 function setupSidebar() {
-  // counts
   document.getElementById('c-all').textContent = DB.length;
-  ['ad','exo','aad','graph'].forEach(c => {
-    document.getElementById('c-' + c).textContent = DB.filter(s => s.cat === c).length;
+  ['ad','exo','aad','graph'].forEach(function(c) {
+    document.getElementById('c-' + c).textContent = DB.filter(function(s){ return s.cat === c; }).length;
   });
 
-  // tags
-  const allTags = [...new Set(DB.flatMap(s => s.tags))].sort();
-  const cloud   = document.getElementById('tagCloud');
+  var allTags = [...new Set(DB.flatMap(function(s){ return s.tags; }))].sort();
+  var cloud   = document.getElementById('tagCloud');
   cloud.innerHTML = '';
-  allTags.forEach(t => {
-    const b = document.createElement('button');
-    b.className   = 'tag-btn';
+  allTags.forEach(function(t) {
+    var b = document.createElement('button');
+    b.className = 'tag-btn';
     b.textContent = t;
-    b.addEventListener('click', function () {
+    b.addEventListener('click', function() {
       if (curTag === t) { curTag = ''; b.classList.remove('on'); }
-      else {
-        curTag = t;
-        document.querySelectorAll('.tag-btn').forEach(x => x.classList.remove('on'));
-        b.classList.add('on');
-      }
+      else { curTag = t; document.querySelectorAll('.tag-btn').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); }
       render();
     });
     cloud.appendChild(b);
   });
-
-  // cat buttons
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      curCat = btn.dataset.cat;
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const titles = { all:'Tous les scripts', ad:'Active Directory', exo:'Exchange Online', aad:'Entra ID / Azure AD', graph:'Microsoft Graph' };
-      document.getElementById('mainTitle').textContent = titles[curCat];
-      render();
-    });
-  });
-
-  // search
-  document.getElementById('q').addEventListener('input', render);
 }
 
-// ── RENDER ───────────────────────────────────────────
+function setCat(btn) {
+  curCat = btn.dataset.cat;
+  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var titles = { all:'Tous les scripts', ad:'Active Directory', exo:'Exchange Online', aad:'Entra ID / Azure AD', graph:'Microsoft Graph' };
+  document.getElementById('mainTitle').textContent = titles[curCat];
+  render();
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
 function render() {
-  const q    = document.getElementById('q').value.toLowerCase().trim();
-  const list = DB.filter(s => {
+  var q    = document.getElementById('q').value.toLowerCase().trim();
+  var list = DB.filter(function(s) {
     if (curCat !== 'all' && s.cat !== curCat) return false;
     if (curTag && !s.tags.includes(curTag)) return false;
-    if (q && !s.title.toLowerCase().includes(q) && !s.desc.toLowerCase().includes(q) && !s.tags.some(t => t.includes(q))) return false;
+    if (q && !s.title.toLowerCase().includes(q) && !s.desc.toLowerCase().includes(q) && !s.tags.some(function(t){ return t.includes(q); })) return false;
     return true;
   });
 
   document.getElementById('visCnt').textContent = list.length;
   document.getElementById('resInfo').textContent = list.length === DB.length ? '' : list.length + ' résultat(s)';
 
-  const grid = document.getElementById('grid');
+  var grid = document.getElementById('grid');
 
-  if (list.length === 0) {
-    grid.innerHTML = '<div class="state-msg"><div class="ico">⚡</div><p>Aucun script trouvé.</p></div>';
+  if (!DB.length) return;  // erreur de chargement déjà affichée
+
+  if (!list.length) {
+    showGridMsg('⚡', 'Aucun script trouvé.');
     return;
   }
 
-  const container = document.createElement('div');
+  var container = document.createElement('div');
   container.className = 'grid';
 
-  list.forEach(function (s, i) {
-    const card = document.createElement('div');
+  list.forEach(function(s, i) {
+    var card = document.createElement('div');
     card.className = 'card';
-    card.style.animationDelay = (i * 0.035) + 's';
+    card.style.animationDelay = (i * 0.03) + 's';
 
-    // stripe
-    const stripe = document.createElement('div');
+    var stripe = document.createElement('div');
     stripe.className = 'stripe stripe-' + s.cat;
 
-    // head
-    const head = document.createElement('div');
+    var head = document.createElement('div');
     head.className = 'card-head';
 
-    const meta = document.createElement('div');
+    var meta = document.createElement('div');
     meta.className = 'card-meta';
 
-    const titleEl = document.createElement('div');
+    var titleEl = document.createElement('div');
     titleEl.className = 'card-title';
     titleEl.textContent = s.title;
 
-    const descEl = document.createElement('div');
+    var descEl = document.createElement('div');
     descEl.className = 'card-desc';
     descEl.textContent = s.desc;
 
-    const tagsEl = document.createElement('div');
+    var tagsEl = document.createElement('div');
     tagsEl.className = 'card-tags';
-    const catB = document.createElement('span');
+    var catB = document.createElement('span');
     catB.className = 'badge badge-' + s.cat;
     catB.textContent = s.cat.toUpperCase();
     tagsEl.appendChild(catB);
-    s.tags.forEach(function (t) {
-      const tb = document.createElement('span');
+    s.tags.forEach(function(t) {
+      var tb = document.createElement('span');
       tb.className = 'badge badge-tag';
       tb.textContent = t;
       tagsEl.appendChild(tb);
@@ -377,49 +558,46 @@ function render() {
     meta.appendChild(descEl);
     meta.appendChild(tagsEl);
 
-    // actions
-    const actions = document.createElement('div');
+    var actions = document.createElement('div');
     actions.className = 'card-actions';
 
-    const btnCopy = document.createElement('button');
+    var btnCopy = document.createElement('button');
     btnCopy.className = 'btn';
     btnCopy.textContent = '⎘ Copier';
-    btnCopy.addEventListener('click', function () {
-      navigator.clipboard.writeText(s.code).then(function () {
+    btnCopy.addEventListener('click', function() {
+      navigator.clipboard.writeText(s.code).then(function() {
         btnCopy.textContent = '✔ Copié';
         btnCopy.classList.add('copied');
-        setTimeout(function () { btnCopy.textContent = '⎘ Copier'; btnCopy.classList.remove('copied'); }, 2000);
+        setTimeout(function() { btnCopy.textContent = '⎘ Copier'; btnCopy.classList.remove('copied'); }, 2000);
       });
     });
 
-    const btnEdit = document.createElement('button');
+    var btnEdit = document.createElement('button');
     btnEdit.className = 'btn btn-edit';
     btnEdit.textContent = '✏';
     btnEdit.title = 'Modifier';
-    btnEdit.addEventListener('click', function () { openModal(s); });
+    btnEdit.addEventListener('click', function() { openModal(s); });
 
-    const btnExp = document.createElement('button');
+    var btnExp = document.createElement('button');
     btnExp.className = 'btn btn-exp';
     btnExp.textContent = '▾';
 
     actions.appendChild(btnCopy);
     actions.appendChild(btnEdit);
     actions.appendChild(btnExp);
-
     head.appendChild(meta);
     head.appendChild(actions);
 
-    // code
-    const wrap = document.createElement('div');
+    var wrap  = document.createElement('div');
     wrap.className = 'code-wrap';
-    const inner = document.createElement('div');
+    var inner = document.createElement('div');
     inner.className = 'code-inner';
-    const pre = document.createElement('pre');
+    var pre   = document.createElement('pre');
     pre.textContent = s.code;
     inner.appendChild(pre);
     wrap.appendChild(inner);
 
-    btnExp.addEventListener('click', function () {
+    btnExp.addEventListener('click', function() {
       wrap.classList.toggle('open');
       btnExp.textContent = wrap.classList.contains('open') ? '▴' : '▾';
     });
@@ -434,87 +612,106 @@ function render() {
   grid.appendChild(container);
 }
 
-// ── MODAL ────────────────────────────────────────────
+// ══════════════════════════════════════════════════
+// MODAL SCRIPT
+// ══════════════════════════════════════════════════
 function openModal(script) {
-  document.getElementById('editId').value   = script ? script.id : '';
+  document.getElementById('editId').value  = script ? script.id : '';
   document.getElementById('modalTitle').textContent = script ? 'Modifier le script' : 'Nouveau script';
-  document.getElementById('fTitle').value   = script ? script.title : '';
-  document.getElementById('fDesc').value    = script ? script.desc  : '';
-  document.getElementById('fCat').value     = script ? script.cat   : 'ad';
-  document.getElementById('fTags').value    = script ? script.tags.join(', ') : '';
-  document.getElementById('fCode').value    = script ? script.code  : '';
+  document.getElementById('fTitle').value  = script ? script.title : '';
+  document.getElementById('fDesc').value   = script ? script.desc  : '';
+  document.getElementById('fCat').value    = script ? script.cat   : 'ad';
+  document.getElementById('fTags').value   = script ? script.tags.join(', ') : '';
+  document.getElementById('fCode').value   = script ? script.code  : '';
   document.getElementById('btnDelete').style.display = script ? 'block' : 'none';
-  document.getElementById('overlay').classList.add('open');
+  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', false, '💾', 'Enregistrer');
+  document.getElementById('overlayScript').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('overlay').classList.remove('open');
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
 }
 
-function closeModalIfBg(e) {
-  if (e.target === document.getElementById('overlay')) closeModal();
+function closeModalIfBg(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
 }
 
-function saveScript() {
-  const title = document.getElementById('fTitle').value.trim();
-  const desc  = document.getElementById('fDesc').value.trim();
-  const cat   = document.getElementById('fCat').value;
-  const tags  = document.getElementById('fTags').value.split(',').map(t => t.trim()).filter(Boolean);
-  const code  = document.getElementById('fCode').value.trim();
-  const editId= document.getElementById('editId').value;
+async function saveScript() {
+  var title  = document.getElementById('fTitle').value.trim();
+  var desc   = document.getElementById('fDesc').value.trim();
+  var cat    = document.getElementById('fCat').value;
+  var tags   = document.getElementById('fTags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+  var code   = document.getElementById('fCode').value.trim();
+  var editId = document.getElementById('editId').value;
 
   if (!title || !desc || !code) { toast('Titre, description et code sont requis.', 'err'); return; }
+  if (!ghToken) { toast('Connecte-toi d\'abord à GitHub.', 'warn'); openTokenModal(); return; }
 
+  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', true, '⏳', 'Sauvegarde...');
+
+  var commitMsg;
   if (editId) {
-    const idx = DB.findIndex(s => s.id === editId);
-    if (idx !== -1) {
-      DB[idx] = { id: editId, cat, title, desc, tags, code };
-    }
+    var idx = DB.findIndex(function(s){ return s.id === editId; });
+    if (idx !== -1) { DB[idx] = { id: editId, cat, title, desc, tags, code }; }
+    commitMsg = 'edit: ' + title;
   } else {
-    const newId = cat + Date.now();
-    DB.push({ id: newId, cat, title, desc, tags, code });
+    DB.push({ id: cat + Date.now(), cat, title, desc, tags, code });
+    commitMsg = 'add: ' + title;
   }
 
-  closeModal();
-  setupSidebar();
-  render();
-  showGithubPanel();
-  toast(editId ? 'Script modifié !' : 'Script ajouté !', 'ok');
+  var ok = await saveToGitHub(commitMsg);
+  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', false, '💾', 'Enregistrer');
+
+  if (ok) {
+    closeModal('overlayScript');
+    setupSidebar();
+    render();
+    toast(editId ? '✔ Script modifié et sauvegardé sur GitHub !' : '✔ Script ajouté et sauvegardé sur GitHub !', 'ok');
+  }
 }
 
-function deleteScript() {
-  const editId = document.getElementById('editId').value;
+async function deleteScript() {
+  var editId = document.getElementById('editId').value;
   if (!editId) return;
-  if (!confirm('Supprimer ce script ?')) return;
-  DB = DB.filter(s => s.id !== editId);
-  closeModal();
-  setupSidebar();
-  render();
-  showGithubPanel();
-  toast('Script supprimé.', 'ok');
+  var s = DB.find(function(x){ return x.id === editId; });
+  if (!confirm('Supprimer "' + (s ? s.title : editId) + '" ?')) return;
+  if (!ghToken) { toast('Connecte-toi d\'abord à GitHub.', 'warn'); openTokenModal(); return; }
+
+  DB = DB.filter(function(x){ return x.id !== editId; });
+  var ok = await saveToGitHub('delete: ' + (s ? s.title : editId));
+  if (ok) {
+    closeModal('overlayScript');
+    setupSidebar();
+    render();
+    toast('✔ Script supprimé sur GitHub.', 'ok');
+  } else {
+    // Rollback local si erreur
+    if (s) DB.push(s);
+  }
 }
 
-// ── GITHUB SYNC ──────────────────────────────────────
-function showGithubPanel() {
-  const panel = document.getElementById('githubPanel');
-  document.getElementById('jsonExport').value = JSON.stringify(DB, null, 2);
-  panel.style.display = 'block';
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
+function showGridMsg(ico, msg) {
+  document.getElementById('grid').innerHTML =
+    '<div class="state-msg"><div class="ico">' + ico + '</div><p>' + msg + '</p></div>';
 }
 
-function copyJson() {
-  const txt = document.getElementById('jsonExport').value;
-  navigator.clipboard.writeText(txt).then(function () {
-    toast('JSON copié dans le presse-papier !', 'ok');
-  });
+function setBtnLoading(btnId, iconId, labelId, loading, icon, label) {
+  document.getElementById(btnId).disabled     = loading;
+  document.getElementById(iconId).textContent = icon;
+  document.getElementById(labelId).textContent= label;
 }
 
-// ── TOAST ────────────────────────────────────────────
+var toastTimer;
 function toast(msg, type) {
-  const el = document.getElementById('toast');
-  el.textContent = (type === 'ok' ? '✔ ' : '⚠ ') + msg;
-  el.className   = 'toast ' + (type || '');
-  el.style.display = 'block';
-  setTimeout(function () { el.style.display = 'none'; }, 3000);
+  clearTimeout(toastTimer);
+  var el = document.getElementById('toast');
+  el.textContent  = msg;
+  el.className    = 'toast ' + (type || '');
+  el.style.display= 'block';
+  toastTimer = setTimeout(function() { el.style.display = 'none'; }, 4000);
 }
 </script>
 </body>
