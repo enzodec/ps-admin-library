@@ -1,0 +1,146 @@
+[
+  {
+    "id": "ad1",
+    "cat": "ad",
+    "title": "Créer un utilisateur AD",
+    "desc": "Crée un compte avec attributs standards et génère un mot de passe aléatoire sécurisé.",
+    "tags": ["users", "création", "password"],
+    "code": "function New-ADUserComplet {\n    param(\n        [Parameter(Mandatory)][string]$Prenom,\n        [Parameter(Mandatory)][string]$Nom,\n        [Parameter(Mandatory)][string]$OU,\n        [string]$Departement = \"\",\n        [string]$Titre = \"\"\n    )\n\n    $SamAccount = ($Prenom[0] + $Nom).ToLower() -replace '[^a-z0-9]',''\n    $UPN        = \"$SamAccount@contoso.com\"\n\n    Add-Type -AssemblyName System.Web\n    $Password  = [System.Web.Security.Membership]::GeneratePassword(16,4)\n    $SecurePwd = ConvertTo-SecureString $Password -AsPlainText -Force\n\n    $Params = @{\n        SamAccountName        = $SamAccount\n        UserPrincipalName     = $UPN\n        GivenName             = $Prenom\n        Surname               = $Nom\n        DisplayName           = \"$Prenom $Nom\"\n        Name                  = \"$Prenom $Nom\"\n        Department            = $Departement\n        Title                 = $Titre\n        Path                  = $OU\n        AccountPassword       = $SecurePwd\n        Enabled               = $true\n        ChangePasswordAtLogon = $true\n    }\n\n    try {\n        New-ADUser @Params\n        Write-Host \"Utilisateur $SamAccount créé.\" -ForegroundColor Green\n        Write-Host \"Mot de passe temporaire : $Password\"\n    } catch {\n        Write-Error \"Erreur création : $_\"\n    }\n}"
+  },
+  {
+    "id": "ad2",
+    "cat": "ad",
+    "title": "Désactiver comptes inactifs",
+    "desc": "Détecte et désactive les comptes inactifs depuis N jours. Génère un rapport CSV. Support -WhatIf.",
+    "tags": ["users", "audit", "sécurité"],
+    "code": "function Disable-ADInactiveUsers {\n    param(\n        [int]$Jours      = 90,\n        [string]$Rapport = \"C:\\Logs\\Inactifs_$(Get-Date -f yyyyMMdd).csv\",\n        [switch]$WhatIf\n    )\n\n    $Limite  = (Get-Date).AddDays(-$Jours)\n    $Comptes = Get-ADUser -Filter {\n        LastLogonDate -lt $Limite -and Enabled -eq $true\n    } -Properties LastLogonDate, Department |\n    Where-Object { $_.DistinguishedName -notlike \"*OU=ServiceAccounts*\" }\n\n    $Résultat = foreach ($U in $Comptes) {\n        if (-not $WhatIf) { Disable-ADAccount -Identity $U.SamAccountName }\n        [PSCustomObject]@{\n            SamAccountName    = $U.SamAccountName\n            Nom               = $U.Name\n            Departement       = $U.Department\n            DerniereConnexion = $U.LastLogonDate\n            Action            = if ($WhatIf) { \"SIMULATION\" } else { \"DESACTIVE\" }\n        }\n    }\n\n    $Résultat | Export-Csv -Path $Rapport -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Résultat.Count) comptes traités — Rapport : $Rapport\"\n}"
+  },
+  {
+    "id": "ad3",
+    "cat": "ad",
+    "title": "Export membres de groupe (récursif)",
+    "desc": "Exporte récursivement tous les membres d'un groupe AD, y compris les groupes imbriqués.",
+    "tags": ["groupes", "rapport", "export"],
+    "code": "function Get-ADGroupMembersReport {\n    param(\n        [Parameter(Mandatory)][string]$GroupName,\n        [string]$Output = \"C:\\Logs\\Groupe_$GroupName.csv\"\n    )\n\n    function Get-Recursive {\n        param([string]$Group, [string]$Parent = \"Direct\")\n        Get-ADGroupMember -Identity $Group | ForEach-Object {\n            if ($_.objectClass -eq 'group') {\n                Get-Recursive -Group $_.SamAccountName -Parent $Group\n            } else {\n                $U = Get-ADUser $_.SamAccountName -Properties EmailAddress,Department,Enabled\n                [PSCustomObject]@{\n                    Login        = $U.SamAccountName\n                    Nom          = $U.Name\n                    Email        = $U.EmailAddress\n                    Departement  = $U.Department\n                    Actif        = $U.Enabled\n                    GroupeParent = $Parent\n                }\n            }\n        }\n    }\n\n    $Membres = Get-Recursive -Group $GroupName\n    $Membres | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Membres.Count) membres exportés vers $Output\"\n}"
+  },
+  {
+    "id": "ad4",
+    "cat": "ad",
+    "title": "Reset mot de passe + déverrouillage",
+    "desc": "Réinitialise le mot de passe, déverrouille le compte et force le changement à la prochaine connexion.",
+    "tags": ["users", "password", "unlock"],
+    "code": "function Reset-ADUserPassword {\n    param(\n        [Parameter(Mandatory)][string]$SamAccountName,\n        [string]$NewPassword = \"\"\n    )\n\n    if (-not $NewPassword) {\n        Add-Type -AssemblyName System.Web\n        $NewPassword = [System.Web.Security.Membership]::GeneratePassword(14,3)\n    }\n\n    $SecurePwd = ConvertTo-SecureString $NewPassword -AsPlainText -Force\n\n    try {\n        Unlock-ADAccount      -Identity $SamAccountName\n        Set-ADAccountPassword -Identity $SamAccountName -NewPassword $SecurePwd -Reset\n        Set-ADUser            -Identity $SamAccountName -ChangePasswordAtLogon $true\n\n        Write-Host \"Compte $SamAccountName réinitialisé.\" -ForegroundColor Green\n        Write-Host \"Mot de passe : $NewPassword\"\n        return $NewPassword\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "ad5",
+    "cat": "ad",
+    "title": "Sync attributs depuis CSV (RH)",
+    "desc": "Met à jour titre, département, manager et téléphone des utilisateurs AD depuis un export RH en CSV.",
+    "tags": ["users", "import", "RH"],
+    "code": "# CSV requis : SamAccountName, Title, Department, Manager, PhoneNumber\nfunction Sync-ADUsersFromCSV {\n    param(\n        [Parameter(Mandatory)][string]$CSVPath,\n        [switch]$WhatIf\n    )\n\n    $Users   = Import-Csv -Path $CSVPath -Encoding UTF8\n    $Results = foreach ($Row in $Users) {\n        try {\n            $Params = @{\n                Identity    = $Row.SamAccountName\n                Title       = $Row.Title\n                Department  = $Row.Department\n                OfficePhone = $Row.PhoneNumber\n            }\n            if ($Row.Manager) {\n                $Params.Manager = (Get-ADUser $Row.Manager).DistinguishedName\n            }\n            if (-not $WhatIf) { Set-ADUser @Params }\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"OK\" }\n        } catch {\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"ERREUR\"; Detail=$_.Exception.Message }\n        }\n    }\n\n    $Results | Format-Table -AutoSize\n    Write-Host \"OK:$(($Results|Where Status -eq OK).Count)  Erreurs:$(($Results|Where Status -eq ERREUR).Count)\"\n}"
+  },
+  {
+    "id": "exo1",
+    "cat": "exo",
+    "title": "Connexion Exchange Online (safe)",
+    "desc": "Connexion à Exchange Online avec détection de session existante et installation automatique du module.",
+    "tags": ["connexion", "auth"],
+    "code": "function Connect-EXOSafe {\n    param(\n        [string]$UPN   = \"\",\n        [switch]$Force\n    )\n\n    if (-not $Force) {\n        try {\n            if (Get-ConnectionInformation -ErrorAction Stop) {\n                Write-Host \"Déjà connecté à Exchange Online.\" -ForegroundColor Green\n                return\n            }\n        } catch {}\n    }\n\n    if (-not (Get-Module -ListAvailable ExchangeOnlineManagement)) {\n        Write-Host \"Installation du module ExchangeOnlineManagement...\"\n        Install-Module ExchangeOnlineManagement -Force -Scope CurrentUser\n    }\n\n    Import-Module ExchangeOnlineManagement\n    $P = @{ ShowBanner = $false }\n    if ($UPN) { $P.UserPrincipalName = $UPN }\n\n    try {\n        Connect-ExchangeOnline @P\n        Write-Host \"Connecté à Exchange Online.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Connexion impossible : $_\"\n    }\n}"
+  },
+  {
+    "id": "exo2",
+    "cat": "exo",
+    "title": "Rapport taille des boîtes aux lettres",
+    "desc": "Génère un rapport trié par taille de toutes les boîtes Exchange Online avec quota et dernière connexion.",
+    "tags": ["mailbox", "rapport", "storage"],
+    "code": "function Get-MailboxSizeReport {\n    param(\n        [string]$Output = \"C:\\Logs\\MailboxSizes_$(Get-Date -f yyyyMMdd).csv\",\n        [int]$Top = 0\n    )\n\n    $Mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails UserMailbox\n    $Report = $Mailboxes | ForEach-Object {\n        $Stats  = Get-MailboxStatistics -Identity $_.ExchangeGuid\n        $SizeMB = [math]::Round($Stats.TotalItemSize.Value.ToBytes() / 1MB, 2)\n        [PSCustomObject]@{\n            DisplayName       = $_.DisplayName\n            UPN               = $_.UserPrincipalName\n            TailleMB          = $SizeMB\n            NbItems           = $Stats.ItemCount\n            DerniereConnexion = $Stats.LastLogonTime\n            Quota             = $_.ProhibitSendReceiveQuota\n        }\n    } | Sort-Object TailleMB -Descending\n\n    if ($Top -gt 0) { $Report = $Report | Select-Object -First $Top }\n    $Report | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Report.Count) boîtes exportées vers $Output\"\n}"
+  },
+  {
+    "id": "exo3",
+    "cat": "exo",
+    "title": "Créer boîte partagée + permissions",
+    "desc": "Crée une boîte partagée Exchange Online et attribue FullAccess + SendAs à une liste d'utilisateurs.",
+    "tags": ["mailbox", "shared", "permissions"],
+    "code": "function New-SharedMailboxComplete {\n    param(\n        [Parameter(Mandatory)][string]$DisplayName,\n        [Parameter(Mandatory)][string]$Alias,\n        [string]$Domain         = \"contoso.com\",\n        [string[]]$FullAccessTo = @(),\n        [string[]]$SendAsTo     = @()\n    )\n\n    $Email = \"$Alias@$Domain\"\n\n    try {\n        New-Mailbox -Shared -Name $DisplayName -DisplayName $DisplayName `\n            -Alias $Alias -PrimarySmtpAddress $Email\n        Write-Host \"Boîte $Email créée.\" -ForegroundColor Green\n        Start-Sleep -Seconds 5\n\n        foreach ($U in $FullAccessTo) {\n            Add-MailboxPermission -Identity $Email -User $U `\n                -AccessRights FullAccess -InheritanceType All -AutoMapping $true\n            Write-Host \"  FullAccess accordé à $U\"\n        }\n        foreach ($U in $SendAsTo) {\n            Add-RecipientPermission -Identity $Email -Trustee $U `\n                -AccessRights SendAs -Confirm:$false\n            Write-Host \"  SendAs accordé à $U\"\n        }\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "exo4",
+    "cat": "exo",
+    "title": "Audit des forwards externes",
+    "desc": "Détecte toutes les boîtes avec un transfert automatique vers une adresse externe — risque de fuite de données.",
+    "tags": ["audit", "sécurité", "forward"],
+    "code": "function Get-ExternalForwardAudit {\n    param(\n        [string]$Output = \"C:\\Logs\\ExternalForwards_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Forwards = Get-Mailbox -ResultSize Unlimited |\n        Where-Object { $_.ForwardingAddress -or $_.ForwardingSmtpAddress } |\n        ForEach-Object {\n            [PSCustomObject]@{\n                UPN         = $_.UserPrincipalName\n                DisplayName = $_.DisplayName\n                ForwardVers = $_.ForwardingSmtpAddress ?? $_.ForwardingAddress\n                GarderCopie = $_.DeliverToMailboxAndForward\n                Détecté     = Get-Date -Format \"yyyy-MM-dd HH:mm\"\n            }\n        }\n\n    if ($Forwards.Count -eq 0) {\n        Write-Host \"Aucun forward externe détecté.\" -ForegroundColor Green\n        return\n    }\n\n    $Forwards | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Forwards.Count) forward(s) externe(s) ! Rapport : $Output\"\n    $Forwards | Format-Table -AutoSize\n}"
+  },
+  {
+    "id": "exo5",
+    "cat": "exo",
+    "title": "Règle de transport personnalisée",
+    "desc": "Crée une règle Exchange Online pour bloquer, rediriger ou tagguer des emails selon des critères avancés.",
+    "tags": ["transport", "sécurité", "règles"],
+    "code": "function New-CustomTransportRule {\n    param(\n        [Parameter(Mandatory)][string]$Nom,\n        [string[]]$DomainesBloqués = @(),\n        [string[]]$MotsClésSujet   = @(),\n        [string]$Action            = \"Reject\",\n        [string]$RedirectVers      = \"\",\n        [string]$MessageRefus      = \"Message bloqué par la politique de sécurité.\"\n    )\n\n    $P = @{ Name=$Nom; Priority=0; Enabled=$true }\n    if ($DomainesBloqués) { $P.SenderDomainIs       = $DomainesBloqués }\n    if ($MotsClésSujet)   { $P.SubjectContainsWords = $MotsClésSujet   }\n\n    switch ($Action) {\n        \"Reject\"    { $P.RejectMessageReasonText = $MessageRefus }\n        \"Redirect\"  { $P.RedirectMessageTo = $RedirectVers }\n        \"AddHeader\" { $P.SetHeaderName=\"X-Flag\"; $P.SetHeaderValue=\"Suspicious\" }\n    }\n\n    try {\n        New-TransportRule @P\n        Write-Host \"Règle '$Nom' créée.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "aad1",
+    "cat": "aad",
+    "title": "Connexion Microsoft Graph / Entra",
+    "desc": "Connexion à Microsoft Graph avec support interactif et App Registration pour l'automatisation.",
+    "tags": ["connexion", "auth"],
+    "code": "function Connect-MgGraphSafe {\n    param(\n        [string[]]$Scopes = @(\"User.Read.All\",\"Group.ReadWrite.All\",\"Directory.Read.All\"),\n        [string]$TenantId     = \"\",\n        [string]$ClientId     = \"\",\n        [string]$ClientSecret = \"\"\n    )\n\n    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {\n        Write-Host \"Installation du module Microsoft.Graph...\"\n        Install-Module Microsoft.Graph -Force -Scope CurrentUser\n    }\n\n    if ($ClientId -and $ClientSecret -and $TenantId) {\n        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force\n        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)\n        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred\n        Write-Host \"Connecté via App Registration.\" -ForegroundColor Green\n    } else {\n        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId\n        Write-Host \"Connecté de façon interactive.\" -ForegroundColor Green\n    }\n}"
+  },
+  {
+    "id": "aad2",
+    "cat": "aad",
+    "title": "Rapport licences Entra ID",
+    "desc": "Liste les licences par utilisateur et identifie les comptes inactifs depuis 90j avec des licences actives.",
+    "tags": ["licences", "rapport", "audit"],
+    "code": "function Get-EntraLicenseReport {\n    param(\n        [string]$Output = \"C:\\Logs\\Licences_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $SkuMap = @{}\n    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }\n\n    $Rapport = Get-MgUser -All `\n        -Property DisplayName,UserPrincipalName,AssignedLicenses,SignInActivity |\n    ForEach-Object {\n        $Lics = $_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] ?? $_.SkuId }\n        $Cnx  = $_.SignInActivity?.LastSignInDateTime\n        [PSCustomObject]@{\n            DisplayName        = $_.DisplayName\n            UPN                = $_.UserPrincipalName\n            Licences           = ($Lics -join \"; \")\n            NbLicences         = $Lics.Count\n            DerniereConnexion  = $Cnx\n            InactifAvecLicence = ($Cnx -lt (Get-Date).AddDays(-90) -and $Lics.Count -gt 0)\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $N = ($Rapport | Where-Object InactifAvecLicence).Count\n    Write-Warning \"$N utilisateurs inactifs ont encore des licences.\"\n}"
+  },
+  {
+    "id": "aad3",
+    "cat": "aad",
+    "title": "Révoquer sessions utilisateur",
+    "desc": "Révoque tous les tokens d'un utilisateur compromis en urgence. Option pour désactiver le compte.",
+    "tags": ["sécurité", "incident", "tokens"],
+    "code": "function Revoke-EntraUserSessions {\n    param(\n        [Parameter(Mandatory)][string[]]$UPNs,\n        [switch]$DisableAccount\n    )\n\n    foreach ($UPN in $UPNs) {\n        try {\n            $User = Get-MgUser -UserId $UPN -ErrorAction Stop\n            Revoke-MgUserSignInSession -UserId $User.Id\n            Write-Host \"Sessions révoquées : $UPN\" -ForegroundColor Green\n\n            if ($DisableAccount) {\n                Update-MgUser -UserId $User.Id -AccountEnabled:$false\n                Write-Warning \"Compte désactivé : $UPN\"\n            }\n        } catch {\n            Write-Error \"Erreur pour $UPN : $_\"\n        }\n    }\n}"
+  },
+  {
+    "id": "aad4",
+    "cat": "aad",
+    "title": "Audit accès conditionnel (CA)",
+    "desc": "Liste toutes les politiques CA avec état, utilisateurs/groupes ciblés, apps et contrôles requis (MFA...).",
+    "tags": ["CA", "sécurité", "audit"],
+    "code": "function Get-ConditionalAccessAudit {\n    param(\n        [string]$Output = \"C:\\Logs\\CA_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Rapport = Get-MgIdentityConditionalAccessPolicy | ForEach-Object {\n        [PSCustomObject]@{\n            Nom         = $_.DisplayName\n            Statut      = $_.State\n            UsersIncl   = ($_.Conditions.Users.IncludeUsers   -join \"; \")\n            GroupesIncl = ($_.Conditions.Users.IncludeGroups  -join \"; \")\n            AppsIncl    = ($_.Conditions.Applications.IncludeApplications -join \"; \")\n            Controles   = ($_.GrantControls?.BuiltInControls  -join \"; \")\n            MFA         = ($_.GrantControls?.BuiltInControls -contains \"mfa\")\n            Créé        = $_.CreatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) politiques CA exportées.\"\n    $Rapport | Format-Table Nom, Statut, MFA -AutoSize\n}"
+  },
+  {
+    "id": "graph1",
+    "cat": "graph",
+    "title": "Wrapper REST Graph + pagination auto",
+    "desc": "Appel générique à n'importe quel endpoint Graph avec suivi automatique de la pagination @odata.nextLink.",
+    "tags": ["api", "rest", "pagination"],
+    "code": "function Invoke-GraphAPI {\n    param(\n        [Parameter(Mandatory)][string]$Endpoint,\n        [string]$Method = \"GET\",\n        [object]$Body   = $null,\n        [switch]$GetAll\n    )\n\n    $Token   = (Get-MgContext).AccessToken\n    $Headers = @{\n        Authorization  = \"Bearer $Token\"\n        \"Content-Type\" = \"application/json\"\n    }\n    $URL   = \"https://graph.microsoft.com/v1.0/$($Endpoint.TrimStart('/'))\"\n    $Items = [System.Collections.Generic.List[object]]::new()\n\n    do {\n        $P = @{ Uri=$URL; Method=$Method; Headers=$Headers }\n        if ($Body -and $Method -ne \"GET\") {\n            $P.Body = ($Body | ConvertTo-Json -Depth 10)\n        }\n        $R = Invoke-RestMethod @P\n\n        if ($R.value) { $Items.AddRange($R.value) }\n        else          { return $R }\n\n        $URL = $R.\"@odata.nextLink\"\n    } while ($GetAll -and $URL)\n\n    return $Items\n}"
+  },
+  {
+    "id": "graph2",
+    "cat": "graph",
+    "title": "Envoyer un email via Graph (SendMail)",
+    "desc": "Envoie un email HTML avec pièces jointes optionnelles via Microsoft Graph depuis n'importe quelle boîte.",
+    "tags": ["email", "sendmail", "notification"],
+    "code": "function Send-GraphMail {\n    param(\n        [Parameter(Mandatory)][string]$From,\n        [Parameter(Mandatory)][string[]]$To,\n        [Parameter(Mandatory)][string]$Subject,\n        [Parameter(Mandatory)][string]$Body,\n        [string]$BodyType  = \"HTML\",\n        [string[]]$CC      = @(),\n        [string[]]$Pieces  = @()\n    )\n\n    $ToList = $To | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $CCList = $CC | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $Attach = $Pieces | ForEach-Object {\n        @{\n            \"@odata.type\" = \"#microsoft.graph.fileAttachment\"\n            name          = [IO.Path]::GetFileName($_)\n            contentBytes  = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_))\n        }\n    }\n\n    $Payload = @{\n        message = @{\n            subject      = $Subject\n            body         = @{ contentType=$BodyType; content=$Body }\n            toRecipients = $ToList\n            ccRecipients = $CCList\n            attachments  = $Attach\n        }\n        saveToSentItems = $true\n    }\n\n    $UserId = (Get-MgUser -UserId $From).Id\n    Invoke-MgGraphRequest -Method POST `\n        -Uri \"users/$UserId/sendMail\" `\n        -Body ($Payload | ConvertTo-Json -Depth 10)\n\n    Write-Host \"Email envoyé depuis $From.\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "graph3",
+    "cat": "graph",
+    "title": "Rapport connexions risquées (Identity Protection)",
+    "desc": "Récupère les utilisateurs à risque détectés par Entra ID Protection avec niveau, état et détail du risque.",
+    "tags": ["sécurité", "risque", "identity"],
+    "code": "function Get-RiskyUsersReport {\n    param(\n        [string]$RiskLevel = \"high\",\n        [string]$Output    = \"C:\\Logs\\RiskyUsers_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $URI    = \"identityProtection/riskyUsers?`$filter=riskLevel eq '$RiskLevel'\"\n    $Result = Invoke-MgGraphRequest -Method GET -Uri $URI\n\n    $Rapport = $Result.value | ForEach-Object {\n        [PSCustomObject]@{\n            UPN         = $_.userPrincipalName\n            Nom         = $_.userDisplayName\n            RiskLevel   = $_.riskLevel\n            RiskState   = $_.riskState\n            RiskDetail  = $_.riskDetail\n            DerniereMAJ = $_.riskLastUpdatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) utilisateur(s) à risque '$RiskLevel' détecté(s).\"\n    return $Rapport\n}"
+  },
+  {
+    "id": "graph4",
+    "cat": "graph",
+    "title": "Créer un channel Microsoft Teams",
+    "desc": "Crée automatiquement un channel standard ou privé dans une équipe Teams existante via Graph API.",
+    "tags": ["teams", "channel", "collaboration"],
+    "code": "function New-TeamsChannel {\n    param(\n        [Parameter(Mandatory)][string]$TeamId,\n        [Parameter(Mandatory)][string]$Nom,\n        [string]$Description = \"\",\n        [string]$Type        = \"standard\"\n    )\n\n    $Body = @{\n        displayName    = $Nom\n        description    = $Description\n        membershipType = $Type\n    } | ConvertTo-Json\n\n    try {\n        $R = Invoke-MgGraphRequest `\n            -Method POST `\n            -Uri \"teams/$TeamId/channels\" `\n            -Body $Body `\n            -ContentType \"application/json\"\n\n        Write-Host \"Channel '$Nom' créé.\" -ForegroundColor Green\n        Write-Host \"URL : $($R.webUrl)\"\n        return $R\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  }
+]

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS Admin Library</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f12; --surface:#13161b; --surface2:#1a1e25;
+  --border:#222730; --border2:#2d3440;
+  --text:#b8c4d4; --dim:#4e5a6e; --bright:#e8eef8;
+  --c-ad:#3b82f6; --c-exo:#10b981; --c-aad:#f59e0b; --c-graph:#a78bfa;
+  --accent:#3b82f6; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:rgba(13,15,18,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:28px;height:28px;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;}
+.logo-name{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--bright);letter-spacing:-.02em;}
+.logo-name em{color:var(--accent);font-style:normal;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--dim);}
+.pill b{color:var(--accent);}
+.btn-add{display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;transition:opacity .15s;}
+.btn-add:hover{opacity:.85;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 56px);position:relative;z-index:1;}
+
+/* SIDEBAR */
+aside{border-right:1px solid var(--border);padding:18px 12px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.s-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:0 6px;margin-bottom:6px;display:block;}
+.search-box{position:relative;margin-bottom:20px;}
+.search-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px 8px 28px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;transition:border .2s;}
+.search-box input:focus{border-color:var(--accent);}
+.search-box input::placeholder{color:var(--dim);}
+.s-ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;}
+.cat-btn{width:100%;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-align:left;transition:all .15s;margin-bottom:2px;}
+.cat-btn:hover{background:var(--surface2);color:var(--text);}
+.cat-btn.active{background:var(--surface2);color:var(--bright);}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cnt{margin-left:auto;font-size:10px;background:var(--border);padding:1px 6px;border-radius:10px;color:var(--dim);}
+.divider{height:1px;background:var(--border);margin:16px 4px;}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:4px;padding:0 4px;}
+.tag-btn{font-size:10px;padding:3px 7px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;}
+.tag-btn:hover,.tag-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08);}
+
+/* MAIN */
+main{padding:22px 26px;}
+.main-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.main-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--bright);letter-spacing:-.02em;}
+.res-info{font-size:11px;color:var(--dim);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s;animation:up .22s ease both;}
+.card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.45);}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.stripe{height:2px;}
+.stripe-ad{background:linear-gradient(90deg,var(--c-ad),transparent);}
+.stripe-exo{background:linear-gradient(90deg,var(--c-exo),transparent);}
+.stripe-aad{background:linear-gradient(90deg,var(--c-aad),transparent);}
+.stripe-graph{background:linear-gradient(90deg,var(--c-graph),transparent);}
+.card-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.card-meta{flex:1;min-width:0;}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--bright);margin-bottom:3px;}
+.card-desc{font-size:11px;color:var(--dim);line-height:1.55;}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.badge{font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:3px;text-transform:uppercase;}
+.badge-ad{background:rgba(59,130,246,.1);color:var(--c-ad);border:1px solid rgba(59,130,246,.25);}
+.badge-exo{background:rgba(16,185,129,.1);color:var(--c-exo);border:1px solid rgba(16,185,129,.25);}
+.badge-aad{background:rgba(245,158,11,.1);color:var(--c-aad);border:1px solid rgba(245,158,11,.25);}
+.badge-graph{background:rgba(167,139,250,.1);color:var(--c-graph);border:1px solid rgba(167,139,250,.25);}
+.badge-tag{background:rgba(78,90,110,.15);color:var(--dim);border:1px solid var(--border);}
+.card-actions{display:flex;gap:5px;flex-shrink:0;}
+.btn{font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--dim);transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.copied{border-color:var(--ok);color:var(--ok);background:rgba(16,185,129,.08);}
+.btn-edit:hover{border-color:var(--warn);color:var(--warn);}
+.btn-del:hover{border-color:var(--danger);color:var(--danger);}
+.btn-exp{padding:4px 7px;font-size:11px;}
+.code-wrap{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.code-wrap.open{max-height:500px;}
+.code-inner{overflow:auto;max-height:420px;padding:12px 14px;background:rgba(0,0,0,.3);border-top:1px solid var(--border);}
+.code-inner pre{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:var(--text);white-space:pre;}
+
+/* EMPTY / LOADING */
+.state-msg{text-align:center;padding:80px 20px;color:var(--dim);}
+.state-msg .ico{font-size:32px;margin-bottom:10px;}
+.state-msg p{font-size:12px;}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--bright);margin-bottom:20px;}
+.form-row{margin-bottom:14px;}
+.form-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .2s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
+.form-select{cursor:pointer;}
+.form-textarea{min-height:180px;resize:vertical;line-height:1.65;}
+.form-hint{font-size:10px;color:var(--dim);margin-top:4px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.btn-primary{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 16px;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--text);color:var(--text);}
+.btn-danger-solid{background:var(--danger);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.btn-danger-solid:hover{opacity:.85;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--bright);display:none;animation:slideIn .25s ease;}
+.toast.ok{border-color:var(--ok);color:var(--ok);}
+.toast.err{border-color:var(--danger);color:var(--danger);}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">PS</div>
+    <div class="logo-name">Admin<em>Lib</em></div>
+  </div>
+  <div class="header-right">
+    <div class="pill">Scripts : <b id="visCnt">0</b></div>
+    <button class="btn-add" onclick="openModal()">＋ Ajouter un script</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="search-box">
+      <span class="s-ico">🔍</span>
+      <input id="q" type="text" placeholder="Rechercher...">
+    </div>
+    <span class="s-label">Catégories</span>
+    <button class="cat-btn active" data-cat="all">
+      <span class="dot" style="background:var(--dim)"></span> Tous
+      <span class="cnt" id="c-all">0</span>
+    </button>
+    <button class="cat-btn" data-cat="ad">
+      <span class="dot" style="background:var(--c-ad)"></span> Active Directory
+      <span class="cnt" id="c-ad">0</span>
+    </button>
+    <button class="cat-btn" data-cat="exo">
+      <span class="dot" style="background:var(--c-exo)"></span> Exchange Online
+      <span class="cnt" id="c-exo">0</span>
+    </button>
+    <button class="cat-btn" data-cat="aad">
+      <span class="dot" style="background:var(--c-aad)"></span> Entra ID / AAD
+      <span class="cnt" id="c-aad">0</span>
+    </button>
+    <button class="cat-btn" data-cat="graph">
+      <span class="dot" style="background:var(--c-graph)"></span> Microsoft Graph
+      <span class="cnt" id="c-graph">0</span>
+    </button>
+    <div class="divider"></div>
+    <span class="s-label">Tags</span>
+    <div class="tag-cloud" id="tagCloud"></div>
+  </aside>
+
+  <main>
+    <div class="main-top">
+      <div class="main-title" id="mainTitle">Tous les scripts</div>
+      <div class="res-info" id="resInfo"></div>
+    </div>
+    <div id="grid"></div>
+  </main>
+</div>
+
+<!-- MODAL AJOUT / ÉDITION -->
+<div class="overlay" id="overlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Nouveau script</div>
+    <input type="hidden" id="editId">
+
+    <div class="form-row">
+      <label class="form-label">Titre *</label>
+      <input class="form-input" id="fTitle" placeholder="Ex: Créer un groupe de distribution">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Description *</label>
+      <input class="form-input" id="fDesc" placeholder="Courte description de ce que fait le script">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-row">
+        <label class="form-label">Catégorie *</label>
+        <select class="form-select" id="fCat">
+          <option value="ad">Active Directory</option>
+          <option value="exo">Exchange Online</option>
+          <option value="aad">Entra ID / AAD</option>
+          <option value="graph">Microsoft Graph</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tags</label>
+        <input class="form-input" id="fTags" placeholder="users, audit, rapport">
+        <div class="form-hint">Séparés par des virgules</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Code PowerShell *</label>
+      <textarea class="form-textarea" id="fCode" placeholder="function Mon-Script {&#10;    param(...)&#10;    ...&#10;}"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-danger-solid" id="btnDelete" style="display:none;margin-right:auto" onclick="deleteScript()">🗑 Supprimer</button>
+      <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary" onclick="saveScript()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- INSTRUCTIONS GITHUB PANEL -->
+<div id="githubPanel" style="display:none;position:fixed;bottom:24px;left:24px;z-index:150;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:18px 20px;max-width:360px;font-size:11px;line-height:1.7;">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--bright);margin-bottom:10px;">📋 Synchroniser vers GitHub</div>
+  <div style="color:var(--dim);margin-bottom:12px;">Copie le JSON ci-dessous et remplace le contenu de <code style="color:var(--accent)">scripts.json</code> dans ton repo GitHub.</div>
+  <textarea id="jsonExport" readonly style="width:100%;height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;resize:none;outline:none;"></textarea>
+  <div style="display:flex;gap:8px;margin-top:10px;">
+    <button class="btn-primary" style="flex:1" onclick="copyJson()">⎘ Copier le JSON</button>
+    <button class="btn-secondary" onclick="document.getElementById('githubPanel').style.display='none'">✕</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────
+// Remplace cette URL par ton raw GitHub URL après déploiement
+// Ex: https://raw.githubusercontent.com/TON_USER/ps-admin-library/main/scripts.json
+const SCRIPTS_URL = './scripts.json';
+
+// ── STATE ────────────────────────────────────────────
+let DB      = [];
+let curCat  = 'all';
+let curTag  = '';
+
+// ── BOOT ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function () {
+  await loadScripts();
+  setupSidebar();
+  render();
+});
+
+async function loadScripts() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<div class="state-msg"><div class="ico">⏳</div><p>Chargement des scripts...</p></div>';
+  try {
+    const r = await fetch(SCRIPTS_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    DB = await r.json();
+  } catch (e) {
+    grid.innerHTML = '<div class="state-msg"><div class="ico">⚠️</div><p>Impossible de charger scripts.json<br><small>' + e.message + '</small></p></div>';
+    DB = [];
+  }
+}
+
+// ── SIDEBAR ──────────────────────────────────────────
+function setupSidebar() {
+  // counts
+  document.getElementById('c-all').textContent = DB.length;
+  ['ad','exo','aad','graph'].forEach(c => {
+    document.getElementById('c-' + c).textContent = DB.filter(s => s.cat === c).length;
+  });
+
+  // tags
+  const allTags = [...new Set(DB.flatMap(s => s.tags))].sort();
+  const cloud   = document.getElementById('tagCloud');
+  cloud.innerHTML = '';
+  allTags.forEach(t => {
+    const b = document.createElement('button');
+    b.className   = 'tag-btn';
+    b.textContent = t;
+    b.addEventListener('click', function () {
+      if (curTag === t) { curTag = ''; b.classList.remove('on'); }
+      else {
+        curTag = t;
+        document.querySelectorAll('.tag-btn').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+      }
+      render();
+    });
+    cloud.appendChild(b);
+  });
+
+  // cat buttons
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      curCat = btn.dataset.cat;
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const titles = { all:'Tous les scripts', ad:'Active Directory', exo:'Exchange Online', aad:'Entra ID / Azure AD', graph:'Microsoft Graph' };
+      document.getElementById('mainTitle').textContent = titles[curCat];
+      render();
+    });
+  });
+
+  // search
+  document.getElementById('q').addEventListener('input', render);
+}
+
+// ── RENDER ───────────────────────────────────────────
+function render() {
+  const q    = document.getElementById('q').value.toLowerCase().trim();
+  const list = DB.filter(s => {
+    if (curCat !== 'all' && s.cat !== curCat) return false;
+    if (curTag && !s.tags.includes(curTag)) return false;
+    if (q && !s.title.toLowerCase().includes(q) && !s.desc.toLowerCase().includes(q) && !s.tags.some(t => t.includes(q))) return false;
+    return true;
+  });
+
+  document.getElementById('visCnt').textContent = list.length;
+  document.getElementById('resInfo').textContent = list.length === DB.length ? '' : list.length + ' résultat(s)';
+
+  const grid = document.getElementById('grid');
+
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="state-msg"><div class="ico">⚡</div><p>Aucun script trouvé.</p></div>';
+    return;
+  }
+
+  const container = document.createElement('div');
+  container.className = 'grid';
+
+  list.forEach(function (s, i) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = (i * 0.035) + 's';
+
+    // stripe
+    const stripe = document.createElement('div');
+    stripe.className = 'stripe stripe-' + s.cat;
+
+    // head
+    const head = document.createElement('div');
+    head.className = 'card-head';
+
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'card-title';
+    titleEl.textContent = s.title;
+
+    const descEl = document.createElement('div');
+    descEl.className = 'card-desc';
+    descEl.textContent = s.desc;
+
+    const tagsEl = document.createElement('div');
+    tagsEl.className = 'card-tags';
+    const catB = document.createElement('span');
+    catB.className = 'badge badge-' + s.cat;
+    catB.textContent = s.cat.toUpperCase();
+    tagsEl.appendChild(catB);
+    s.tags.forEach(function (t) {
+      const tb = document.createElement('span');
+      tb.className = 'badge badge-tag';
+      tb.textContent = t;
+      tagsEl.appendChild(tb);
+    });
+
+    meta.appendChild(titleEl);
+    meta.appendChild(descEl);
+    meta.appendChild(tagsEl);
+
+    // actions
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const btnCopy = document.createElement('button');
+    btnCopy.className = 'btn';
+    btnCopy.textContent = '⎘ Copier';
+    btnCopy.addEventListener('click', function () {
+      navigator.clipboard.writeText(s.code).then(function () {
+        btnCopy.textContent = '✔ Copié';
+        btnCopy.classList.add('copied');
+        setTimeout(function () { btnCopy.textContent = '⎘ Copier'; btnCopy.classList.remove('copied'); }, 2000);
+      });
+    });
+
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn btn-edit';
+    btnEdit.textContent = '✏';
+    btnEdit.title = 'Modifier';
+    btnEdit.addEventListener('click', function () { openModal(s); });
+
+    const btnExp = document.createElement('button');
+    btnExp.className = 'btn btn-exp';
+    btnExp.textContent = '▾';
+
+    actions.appendChild(btnCopy);
+    actions.appendChild(btnEdit);
+    actions.appendChild(btnExp);
+
+    head.appendChild(meta);
+    head.appendChild(actions);
+
+    // code
+    const wrap = document.createElement('div');
+    wrap.className = 'code-wrap';
+    const inner = document.createElement('div');
+    inner.className = 'code-inner';
+    const pre = document.createElement('pre');
+    pre.textContent = s.code;
+    inner.appendChild(pre);
+    wrap.appendChild(inner);
+
+    btnExp.addEventListener('click', function () {
+      wrap.classList.toggle('open');
+      btnExp.textContent = wrap.classList.contains('open') ? '▴' : '▾';
+    });
+
+    card.appendChild(stripe);
+    card.appendChild(head);
+    card.appendChild(wrap);
+    container.appendChild(card);
+  });
+
+  grid.innerHTML = '';
+  grid.appendChild(container);
+}
+
+// ── MODAL ────────────────────────────────────────────
+function openModal(script) {
+  document.getElementById('editId').value   = script ? script.id : '';
+  document.getElementById('modalTitle').textContent = script ? 'Modifier le script' : 'Nouveau script';
+  document.getElementById('fTitle').value   = script ? script.title : '';
+  document.getElementById('fDesc').value    = script ? script.desc  : '';
+  document.getElementById('fCat').value     = script ? script.cat   : 'ad';
+  document.getElementById('fTags').value    = script ? script.tags.join(', ') : '';
+  document.getElementById('fCode').value    = script ? script.code  : '';
+  document.getElementById('btnDelete').style.display = script ? 'block' : 'none';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function closeModalIfBg(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+function saveScript() {
+  const title = document.getElementById('fTitle').value.trim();
+  const desc  = document.getElementById('fDesc').value.trim();
+  const cat   = document.getElementById('fCat').value;
+  const tags  = document.getElementById('fTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const code  = document.getElementById('fCode').value.trim();
+  const editId= document.getElementById('editId').value;
+
+  if (!title || !desc || !code) { toast('Titre, description et code sont requis.', 'err'); return; }
+
+  if (editId) {
+    const idx = DB.findIndex(s => s.id === editId);
+    if (idx !== -1) {
+      DB[idx] = { id: editId, cat, title, desc, tags, code };
+    }
+  } else {
+    const newId = cat + Date.now();
+    DB.push({ id: newId, cat, title, desc, tags, code });
+  }
+
+  closeModal();
+  setupSidebar();
+  render();
+  showGithubPanel();
+  toast(editId ? 'Script modifié !' : 'Script ajouté !', 'ok');
+}
+
+function deleteScript() {
+  const editId = document.getElementById('editId').value;
+  if (!editId) return;
+  if (!confirm('Supprimer ce script ?')) return;
+  DB = DB.filter(s => s.id !== editId);
+  closeModal();
+  setupSidebar();
+  render();
+  showGithubPanel();
+  toast('Script supprimé.', 'ok');
+}
+
+// ── GITHUB SYNC ──────────────────────────────────────
+function showGithubPanel() {
+  const panel = document.getElementById('githubPanel');
+  document.getElementById('jsonExport').value = JSON.stringify(DB, null, 2);
+  panel.style.display = 'block';
+}
+
+function copyJson() {
+  const txt = document.getElementById('jsonExport').value;
+  navigator.clipboard.writeText(txt).then(function () {
+    toast('JSON copié dans le presse-papier !', 'ok');
+  });
+}
+
+// ── TOAST ────────────────────────────────────────────
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'ok' ? '✔ ' : '⚠ ') + msg;
+  el.className   = 'toast ' + (type || '');
+  el.style.display = 'block';
+  setTimeout(function () { el.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
