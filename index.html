@@ -3,145 +3,116 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PS Admin Library</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<title>Admin Lib Enzo Dec</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#0d0f12; --surface:#13161b; --surface2:#1a1e25;
-  --border:#222730; --border2:#2d3440;
-  --text:#b8c4d4; --dim:#4e5a6e; --bright:#e8eef8;
-  --c-ad:#3b82f6; --c-exo:#10b981; --c-aad:#f59e0b; --c-graph:#a78bfa;
-  --accent:#3b82f6; --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+:root{
+  --bg:#0d0f12;--surface:#13161b;--surface2:#1a1e25;
+  --border:#222730;--border2:#2d3440;
+  --text:#b8c4d4;--dim:#4e5a6e;--bright:#e8eef8;
+  --ad:#3b82f6;--exo:#10b981;--aad:#f59e0b;--graph:#a78bfa;--intune:#f43f5e;
+  --accent:#3b82f6;--ok:#10b981;--danger:#ef4444;--warn:#f59e0b;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
-
-/* ── HEADER ── */
-header{position:sticky;top:0;z-index:100;background:rgba(13,15,18,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:28px;height:28px;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff;}
-.logo-name{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--bright);letter-spacing:-.02em;}
+header{position:sticky;top:0;z-index:50;background:rgba(13,15,18,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:28px;height:28px;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;letter-spacing:-.5px;}
+.logo-name{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--bright);}
 .logo-name em{color:var(--accent);font-style:normal;}
-.header-right{display:flex;align-items:center;gap:8px;}
+.hright{display:flex;align-items:center;gap:8px;}
 .pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--dim);}
 .pill b{color:var(--accent);}
-.gh-status{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;transition:all .15s;}
-.gh-status:hover{border-color:var(--accent);}
-.gh-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);}
-.gh-dot.connected{background:var(--ok);box-shadow:0 0 6px var(--ok);}
-.gh-dot.saving{background:var(--warn);animation:pulse .8s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.btn-add{display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;transition:opacity .15s;}
+.btn-add{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;transition:opacity .15s;}
 .btn-add:hover{opacity:.85;}
-.btn-add:disabled{opacity:.4;cursor:not-allowed;}
-
-/* ── LAYOUT ── */
-.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 56px);position:relative;z-index:1;}
-
-/* ── SIDEBAR ── */
-aside{border-right:1px solid var(--border);padding:18px 12px;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
-.s-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:0 6px;margin-bottom:6px;display:block;}
-.search-box{position:relative;margin-bottom:20px;}
-.search-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 10px 8px 28px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;transition:border .2s;}
-.search-box input:focus{border-color:var(--accent);}
-.search-box input::placeholder{color:var(--dim);}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 54px);position:relative;z-index:1;}
+aside{border-right:1px solid var(--border);padding:16px 12px;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
+.s-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:0 6px;margin-bottom:6px;display:block;}
+.search-wrap{position:relative;margin-bottom:18px;}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 10px 7px 27px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;transition:border .2s;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-wrap input::placeholder{color:var(--dim);}
 .s-ico{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;}
-.cat-btn{width:100%;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-align:left;transition:all .15s;margin-bottom:2px;}
+.cat-btn{width:100%;display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);text-align:left;transition:all .12s;margin-bottom:2px;}
 .cat-btn:hover{background:var(--surface2);color:var(--text);}
 .cat-btn.active{background:var(--surface2);color:var(--bright);}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .cnt{margin-left:auto;font-size:10px;background:var(--border);padding:1px 6px;border-radius:10px;color:var(--dim);}
-.divider{height:1px;background:var(--border);margin:16px 4px;}
+.divider{height:1px;background:var(--border);margin:14px 4px;}
 .tag-cloud{display:flex;flex-wrap:wrap;gap:4px;padding:0 4px;}
-.tag-btn{font-size:10px;padding:3px 7px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;}
+.tag-btn{font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--dim);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .12s;}
 .tag-btn:hover,.tag-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08);}
-
-/* ── MAIN ── */
-main{padding:22px 26px;}
-.main-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.main-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--bright);letter-spacing:-.02em;}
+main{padding:20px 24px;}
+.main-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.main-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--bright);}
 .res-info{font-size:11px;color:var(--dim);}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px;}
-
-/* ── CARD ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s;animation:up .22s ease both;}
-.card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 8px 32px rgba(0,0,0,.45);}
-@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:11px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s;animation:up .2s ease both;}
+.card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 6px 28px rgba(0,0,0,.4);}
+@keyframes up{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 .stripe{height:2px;}
-.stripe-ad{background:linear-gradient(90deg,var(--c-ad),transparent);}
-.stripe-exo{background:linear-gradient(90deg,var(--c-exo),transparent);}
-.stripe-aad{background:linear-gradient(90deg,var(--c-aad),transparent);}
-.stripe-graph{background:linear-gradient(90deg,var(--c-graph),transparent);}
-.card-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.stripe-ad{background:linear-gradient(90deg,var(--ad),transparent);}
+.stripe-exo{background:linear-gradient(90deg,var(--exo),transparent);}
+.stripe-aad{background:linear-gradient(90deg,var(--aad),transparent);}
+.stripe-graph{background:linear-gradient(90deg,var(--graph),transparent);}
+.stripe-intune{background:linear-gradient(90deg,var(--intune),transparent);}
+.card-head{padding:11px 13px 9px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
 .card-meta{flex:1;min-width:0;}
-.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--bright);margin-bottom:3px;}
-.card-desc{font-size:11px;color:var(--dim);line-height:1.55;}
-.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
-.badge{font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:3px;text-transform:uppercase;}
-.badge-ad{background:rgba(59,130,246,.1);color:var(--c-ad);border:1px solid rgba(59,130,246,.25);}
-.badge-exo{background:rgba(16,185,129,.1);color:var(--c-exo);border:1px solid rgba(16,185,129,.25);}
-.badge-aad{background:rgba(245,158,11,.1);color:var(--c-aad);border:1px solid rgba(245,158,11,.25);}
-.badge-graph{background:rgba(167,139,250,.1);color:var(--c-graph);border:1px solid rgba(167,139,250,.25);}
+.card-title{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:var(--bright);margin-bottom:3px;}
+.card-desc{font-size:11px;color:var(--dim);line-height:1.5;}
+.card-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px;}
+.badge{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 5px;border-radius:3px;text-transform:uppercase;}
+.badge-ad{background:rgba(59,130,246,.1);color:var(--ad);border:1px solid rgba(59,130,246,.2);}
+.badge-exo{background:rgba(16,185,129,.1);color:var(--exo);border:1px solid rgba(16,185,129,.2);}
+.badge-aad{background:rgba(245,158,11,.1);color:var(--aad);border:1px solid rgba(245,158,11,.2);}
+.badge-graph{background:rgba(167,139,250,.1);color:var(--graph);border:1px solid rgba(167,139,250,.2);}
+.badge-intune{background:rgba(244,63,94,.1);color:var(--intune);border:1px solid rgba(244,63,94,.2);}
 .badge-tag{background:rgba(78,90,110,.15);color:var(--dim);border:1px solid var(--border);}
-.card-actions{display:flex;gap:5px;flex-shrink:0;}
-.btn{font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--dim);transition:all .15s;white-space:nowrap;}
-.btn:hover{border-color:var(--accent);color:var(--accent);}
-.btn.copied{border-color:var(--ok);color:var(--ok);background:rgba(16,185,129,.08);}
-.btn-edit:hover{border-color:var(--warn);color:var(--warn);}
-.btn-del:hover{border-color:var(--danger);color:var(--danger);}
-.btn-exp{padding:4px 7px;font-size:11px;}
-.code-wrap{max-height:0;overflow:hidden;transition:max-height .3s ease;}
-.code-wrap.open{max-height:500px;}
-.code-inner{overflow:auto;max-height:420px;padding:12px 14px;background:rgba(0,0,0,.3);border-top:1px solid var(--border);}
-.code-inner pre{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:var(--text);white-space:pre;}
-
-/* ── STATE MSGS ── */
-.state-msg{text-align:center;padding:80px 20px;color:var(--dim);}
-.state-msg .ico{font-size:32px;margin-bottom:10px;}
-.state-msg p{font-size:12px;line-height:1.7;}
-
-/* ── MODAL BASE ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;}
+.card-btns{display:flex;gap:4px;flex-shrink:0;}
+.cbtn{font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--dim);transition:all .12s;white-space:nowrap;}
+.cbtn:hover{border-color:var(--accent);color:var(--accent);}
+.cbtn.ok{border-color:var(--ok);color:var(--ok);background:rgba(16,185,129,.08);}
+.cbtn.edit:hover{border-color:var(--warn);color:var(--warn);}
+.cbtn.exp{padding:3px 7px;font-size:11px;}
+.code-wrap{max-height:0;overflow:hidden;transition:max-height .28s ease;}
+.code-wrap.open{max-height:480px;}
+.code-inner{overflow:auto;max-height:400px;padding:11px 13px;background:rgba(0,0,0,.3);border-top:1px solid var(--border);}
+.code-inner pre{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text);white-space:pre;}
+.state{text-align:center;padding:70px 20px;color:var(--dim);}
+.state .ico{font-size:30px;margin-bottom:10px;}
+.state p{font-size:12px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:700px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:28px;position:relative;}
-.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--bright);margin-bottom:20px;}
-.form-row{margin-bottom:14px;}
-.form-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;display:block;}
-.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .2s;}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);}
-.form-select{cursor:pointer;}
-.form-textarea{min-height:200px;resize:vertical;line-height:1.7;}
-.form-hint{font-size:10px;color:var(--dim);margin-top:4px;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);align-items:center;}
-.btn-primary{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 16px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:6px;}
-.btn-primary:hover{opacity:.85;}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
-.btn-secondary{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 16px;cursor:pointer;transition:all .15s;}
-.btn-secondary:hover{border-color:var(--text);color:var(--text);}
-.btn-danger-solid{background:var(--danger);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 14px;cursor:pointer;transition:opacity .15s;margin-right:auto;}
-.btn-danger-solid:hover{opacity:.85;}
-
-/* ── TOKEN MODAL ── */
-.token-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:480px;max-width:96vw;padding:28px;}
-.token-steps{margin:16px 0;display:flex;flex-direction:column;gap:8px;}
-.token-step{display:flex;align-items:flex-start;gap:10px;font-size:11px;color:var(--dim);line-height:1.6;}
-.token-step-n{width:20px;height:20px;border-radius:50%;background:var(--border2);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px;}
-.token-input-wrap{position:relative;}
-.token-input-wrap input{padding-right:70px;}
-.token-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;}
-.token-err{font-size:11px;color:var(--danger);margin-top:8px;display:none;}
-
-/* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;z-index:400;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:11px;color:var(--bright);display:none;animation:slideIn .25s ease;max-width:320px;line-height:1.5;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:11px;width:660px;max-width:95vw;max-height:92vh;overflow-y:auto;padding:24px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--bright);margin-bottom:18px;}
+.frow{margin-bottom:12px;}
+.flabel{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-bottom:4px;display:block;}
+.finput,.fselect,.ftextarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;color:var(--bright);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .18s;}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--accent);}
+.fselect{cursor:pointer;}
+.ftextarea{min-height:190px;resize:vertical;line-height:1.7;}
+.fhint{font-size:10px;color:var(--dim);margin-top:3px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mactions{display:flex;gap:7px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);align-items:center;}
+.mbtn-ok{background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:8px 16px;cursor:pointer;transition:opacity .15s;}
+.mbtn-ok:hover{opacity:.85;}
+.mbtn-cancel{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 14px;cursor:pointer;transition:all .15s;}
+.mbtn-cancel:hover{border-color:var(--text);color:var(--text);}
+.mbtn-del{background:var(--danger);border:none;border-radius:6px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:8px 13px;cursor:pointer;margin-right:auto;transition:opacity .15s;}
+.mbtn-del:hover{opacity:.85;}
+.export-modal{background:var(--surface);border:1px solid var(--border2);border-radius:11px;width:520px;max-width:95vw;padding:24px;}
+.export-steps{margin:12px 0 16px;display:flex;flex-direction:column;gap:10px;}
+.estep{display:flex;align-items:flex-start;gap:9px;font-size:11px;color:var(--dim);line-height:1.6;}
+.estep-n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.estep code{color:var(--accent);background:rgba(59,130,246,.1);padding:1px 5px;border-radius:3px;font-size:10px;}
+.json-preview{width:100%;height:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;resize:none;outline:none;}
+.big-copy{width:100%;background:var(--ok);border:none;border-radius:7px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;padding:10px;cursor:pointer;margin-top:10px;transition:opacity .15s;}
+.big-copy:hover{opacity:.85;}
+.toast{position:fixed;bottom:22px;right:22px;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:9px 15px;font-size:11px;color:var(--bright);display:none;animation:si .2s ease;}
 .toast.ok{border-color:var(--ok);color:var(--ok);}
 .toast.err{border-color:var(--danger);color:var(--danger);}
-.toast.warn{border-color:var(--warn);color:var(--warn);}
-@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-/* scrollbar */
+@keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
@@ -149,56 +120,35 @@ main{padding:22px 26px;}
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="logo">
-    <div class="logo-icon">PS</div>
-    <div class="logo-name">Admin<em>Lib</em></div>
+    <div class="logo-icon">AL</div>
+    <div class="logo-name">Admin Lib <em>Enzo Dec</em></div>
   </div>
-  <div class="header-right">
+  <div class="hright">
     <div class="pill">Scripts : <b id="visCnt">0</b></div>
-    <div class="gh-status" id="ghStatus" onclick="openTokenModal()" title="Connexion GitHub">
-      <span class="gh-dot" id="ghDot"></span>
-      <span id="ghLabel">GitHub non connecté</span>
-    </div>
-    <button class="btn-add" id="btnAdd" onclick="openModal()">＋ Ajouter</button>
+    <button class="btn-add" onclick="openForm()">＋ Nouveau script</button>
   </div>
 </header>
 
 <div class="layout">
-  <!-- SIDEBAR -->
   <aside>
-    <div class="search-box">
+    <div class="search-wrap">
       <span class="s-ico">🔍</span>
       <input id="q" type="text" placeholder="Rechercher...">
     </div>
-    <span class="s-label">Catégories</span>
-    <button class="cat-btn active" data-cat="all">
-      <span class="dot" style="background:var(--dim)"></span> Tous
-      <span class="cnt" id="c-all">0</span>
-    </button>
-    <button class="cat-btn" data-cat="ad">
-      <span class="dot" style="background:var(--c-ad)"></span> Active Directory
-      <span class="cnt" id="c-ad">0</span>
-    </button>
-    <button class="cat-btn" data-cat="exo">
-      <span class="dot" style="background:var(--c-exo)"></span> Exchange Online
-      <span class="cnt" id="c-exo">0</span>
-    </button>
-    <button class="cat-btn" data-cat="aad">
-      <span class="dot" style="background:var(--c-aad)"></span> Entra ID / AAD
-      <span class="cnt" id="c-aad">0</span>
-    </button>
-    <button class="cat-btn" data-cat="graph">
-      <span class="dot" style="background:var(--c-graph)"></span> Microsoft Graph
-      <span class="cnt" id="c-graph">0</span>
-    </button>
+    <span class="s-lbl">Catégories</span>
+    <button class="cat-btn active" data-cat="all"><span class="dot" style="background:var(--dim)"></span>Tous<span class="cnt" id="c-all">0</span></button>
+    <button class="cat-btn" data-cat="ad"><span class="dot" style="background:var(--ad)"></span>Active Directory<span class="cnt" id="c-ad">0</span></button>
+    <button class="cat-btn" data-cat="exo"><span class="dot" style="background:var(--exo)"></span>Exchange Online<span class="cnt" id="c-exo">0</span></button>
+    <button class="cat-btn" data-cat="aad"><span class="dot" style="background:var(--aad)"></span>Entra ID / AAD<span class="cnt" id="c-aad">0</span></button>
+    <button class="cat-btn" data-cat="graph"><span class="dot" style="background:var(--graph)"></span>Microsoft Graph<span class="cnt" id="c-graph">0</span></button>
+    <button class="cat-btn" data-cat="intune"><span class="dot" style="background:var(--intune)"></span>Intune / MEM<span class="cnt" id="c-intune">0</span></button>
     <div class="divider"></div>
-    <span class="s-label">Tags</span>
+    <span class="s-lbl">Tags</span>
     <div class="tag-cloud" id="tagCloud"></div>
   </aside>
 
-  <!-- MAIN -->
   <main>
     <div class="main-top">
       <div class="main-title" id="mainTitle">Tous les scripts</div>
@@ -208,510 +158,1299 @@ main{padding:22px 26px;}
   </main>
 </div>
 
-<!-- ══ MODAL SCRIPT ══ -->
-<div class="overlay" id="overlayScript" onclick="closeModalIfBg(event,'overlayScript')">
+<!-- FORM MODAL -->
+<div class="overlay" id="ovForm" onclick="bgClose(event,'ovForm')">
   <div class="modal">
-    <div class="modal-title" id="modalTitle">Nouveau script</div>
-    <input type="hidden" id="editId">
-
-    <div class="form-row">
-      <label class="form-label">Titre *</label>
-      <input class="form-input" id="fTitle" placeholder="Ex : Créer un groupe de distribution">
+    <div class="modal-title" id="formTitle">Nouveau script</div>
+    <input type="hidden" id="eId">
+    <div class="frow">
+      <label class="flabel">Titre *</label>
+      <input class="finput" id="fTitle" placeholder="Ex : Créer un groupe de distribution">
     </div>
-    <div class="form-row">
-      <label class="form-label">Description *</label>
-      <input class="form-input" id="fDesc" placeholder="Ce que fait le script en une phrase">
+    <div class="frow">
+      <label class="flabel">Description *</label>
+      <input class="finput" id="fDesc" placeholder="Ce que fait le script en une phrase">
     </div>
-    <div class="form-grid">
-      <div class="form-row">
-        <label class="form-label">Catégorie *</label>
-        <select class="form-select" id="fCat">
+    <div class="fgrid">
+      <div class="frow">
+        <label class="flabel">Catégorie *</label>
+        <select class="fselect" id="fCat">
           <option value="ad">Active Directory</option>
           <option value="exo">Exchange Online</option>
           <option value="aad">Entra ID / AAD</option>
           <option value="graph">Microsoft Graph</option>
+          <option value="intune">Intune / MEM</option>
         </select>
       </div>
-      <div class="form-row">
-        <label class="form-label">Tags</label>
-        <input class="form-input" id="fTags" placeholder="users, audit, rapport">
-        <div class="form-hint">Séparés par des virgules</div>
+      <div class="frow">
+        <label class="flabel">Tags</label>
+        <input class="finput" id="fTags" placeholder="users, audit, rapport">
+        <div class="fhint">Séparés par des virgules</div>
       </div>
     </div>
-    <div class="form-row">
-      <label class="form-label">Code PowerShell *</label>
-      <textarea class="form-textarea" id="fCode" placeholder="function Mon-Script {&#10;    param(...)&#10;    ...&#10;}"></textarea>
+    <div class="frow">
+      <label class="flabel">Code PowerShell *</label>
+      <textarea class="ftextarea" id="fCode" placeholder="function Mon-Script {&#10;    param(...)&#10;    # ...&#10;}"></textarea>
     </div>
-
-    <div class="modal-actions">
-      <button class="btn-danger-solid" id="btnDelete" style="display:none" onclick="deleteScript()">🗑 Supprimer</button>
-      <button class="btn-secondary" onclick="closeModal('overlayScript')">Annuler</button>
-      <button class="btn-primary" id="btnSave" onclick="saveScript()">
-        <span id="saveIcon">💾</span> <span id="saveLabel">Enregistrer</span>
-      </button>
+    <div class="mactions">
+      <button class="mbtn-del" id="btnDel" style="display:none" onclick="deleteScript()">🗑 Supprimer</button>
+      <button class="mbtn-cancel" onclick="closeOv('ovForm')">Annuler</button>
+      <button class="mbtn-ok" onclick="saveScript()">💾 Enregistrer</button>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL TOKEN GITHUB ══ -->
-<div class="overlay" id="overlayToken" onclick="closeModalIfBg(event,'overlayToken')">
-  <div class="token-modal">
-    <div class="modal-title">🔑 Connexion GitHub</div>
-    <div style="font-size:11px;color:var(--dim);line-height:1.7;margin-bottom:14px;">
-      Ton token est utilisé uniquement pour écrire dans ton repo.<br>
-      Il n'est <b style="color:var(--text)">jamais stocké</b> — tu le ressaisis à chaque session.
+<!-- EXPORT MODAL -->
+<div class="overlay" id="ovExport" onclick="bgClose(event,'ovExport')">
+  <div class="export-modal">
+    <div class="modal-title">📤 Synchroniser avec GitHub</div>
+    <p style="font-size:11px;color:var(--dim);line-height:1.7;">Copie le JSON et mets à jour <code style="color:var(--accent);font-size:10px;">scripts.json</code> sur GitHub pour synchroniser sur tous tes appareils.</p>
+    <div class="export-steps">
+      <div class="estep"><span class="estep-n">1</span><span>Repo GitHub → clique sur <code>scripts.json</code> → ✏ Edit</span></div>
+      <div class="estep"><span class="estep-n">2</span><span>Sélectionne tout <code>Ctrl+A</code> → Colle <code>Ctrl+V</code></span></div>
+      <div class="estep"><span class="estep-n">3</span><span>Clique <b style="color:var(--bright)">Commit changes</b> → le site se met à jour en 30s</span></div>
     </div>
-
-    <div class="token-steps">
-      <div class="token-step">
-        <span class="token-step-n">1</span>
-        <span>Va sur GitHub → <b style="color:var(--accent)">Settings → Developer settings → Personal access tokens → Tokens (classic)</b></span>
-      </div>
-      <div class="token-step">
-        <span class="token-step-n">2</span>
-        <span>Clique <b style="color:var(--accent)">Generate new token (classic)</b> → coche uniquement <b style="color:var(--ok)">repo</b></span>
-      </div>
-      <div class="token-step">
-        <span class="token-step-n">3</span>
-        <span>Copie le token généré et colle-le ci-dessous</span>
-      </div>
-    </div>
-
-    <div class="form-row" style="margin-top:16px;">
-      <label class="form-label">Personal Access Token</label>
-      <div class="token-input-wrap">
-        <input class="form-input" id="tokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-        <button class="token-toggle" onclick="toggleTokenVis()">afficher</button>
-      </div>
-      <div class="token-err" id="tokenErr">Token invalide ou accès refusé.</div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('overlayToken')">Annuler</button>
-      <button class="btn-primary" id="btnConnect" onclick="connectGitHub()">
-        <span id="connectIcon">🔗</span> <span id="connectLabel">Se connecter</span>
-      </button>
+    <textarea class="json-preview" id="jsonOut" readonly></textarea>
+    <button class="big-copy" onclick="copyJson()">⎘ Copier le JSON complet</button>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="mbtn-cancel" onclick="closeOv('ovExport')">Fermer</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════════
-const GH_USER   = 'enzodec';
-const GH_REPO   = 'ps-admin-library';
-const GH_FILE   = 'scripts.json';
-const GH_BRANCH = 'main';
-const RAW_URL   = 'https://raw.githubusercontent.com/' + GH_USER + '/' + GH_REPO + '/' + GH_BRANCH + '/' + GH_FILE;
-const API_URL   = 'https://api.github.com/repos/' + GH_USER + '/' + GH_REPO + '/contents/' + GH_FILE;
+// ══════════════════════════════════════════
+// DONNÉES — tous les scripts intégrés
+// ══════════════════════════════════════════
+var DB = [
 
-// ══════════════════════════════════════════════════
+// ── ACTIVE DIRECTORY ──────────────────────
+{id:'ad1',cat:'ad',title:'Créer un utilisateur AD',desc:"Crée un compte avec attributs standards et génère un mot de passe aléatoire sécurisé.",tags:['users','création','password'],
+code:`function New-ADUserComplet {
+    param(
+        [Parameter(Mandatory)][string]$Prenom,
+        [Parameter(Mandatory)][string]$Nom,
+        [Parameter(Mandatory)][string]$OU,
+        [string]$Departement = "",
+        [string]$Titre = ""
+    )
+
+    $SamAccount = ($Prenom[0] + $Nom).ToLower() -replace '[^a-z0-9]',''
+    $UPN        = "$SamAccount@contoso.com"
+
+    Add-Type -AssemblyName System.Web
+    $Password  = [System.Web.Security.Membership]::GeneratePassword(16,4)
+    $SecurePwd = ConvertTo-SecureString $Password -AsPlainText -Force
+
+    $Params = @{
+        SamAccountName        = $SamAccount
+        UserPrincipalName     = $UPN
+        GivenName             = $Prenom
+        Surname               = $Nom
+        DisplayName           = "$Prenom $Nom"
+        Name                  = "$Prenom $Nom"
+        Department            = $Departement
+        Title                 = $Titre
+        Path                  = $OU
+        AccountPassword       = $SecurePwd
+        Enabled               = $true
+        ChangePasswordAtLogon = $true
+    }
+
+    try {
+        New-ADUser @Params
+        Write-Host "Utilisateur $SamAccount cree." -ForegroundColor Green
+        Write-Host "Mot de passe temporaire : $Password"
+    } catch {
+        Write-Error "Erreur creation : $_"
+    }
+}`},
+
+{id:'ad2',cat:'ad',title:'Désactiver comptes inactifs',desc:"Détecte et désactive les comptes inactifs depuis N jours. Rapport CSV + support -WhatIf.",tags:['users','audit','sécurité'],
+code:`function Disable-ADInactiveUsers {
+    param(
+        [int]$Jours      = 90,
+        [string]$Rapport = "C:\\Logs\\Inactifs_$(Get-Date -f yyyyMMdd).csv",
+        [switch]$WhatIf
+    )
+
+    $Limite  = (Get-Date).AddDays(-$Jours)
+    $Comptes = Get-ADUser -Filter {
+        LastLogonDate -lt $Limite -and Enabled -eq $true
+    } -Properties LastLogonDate, Department |
+    Where-Object { $_.DistinguishedName -notlike "*OU=ServiceAccounts*" }
+
+    $Result = foreach ($U in $Comptes) {
+        if (-not $WhatIf) { Disable-ADAccount -Identity $U.SamAccountName }
+        [PSCustomObject]@{
+            SamAccountName    = $U.SamAccountName
+            Nom               = $U.Name
+            Departement       = $U.Department
+            DerniereConnexion = $U.LastLogonDate
+            Action            = if ($WhatIf) { "SIMULATION" } else { "DESACTIVE" }
+        }
+    }
+
+    $Result | Export-Csv -Path $Rapport -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Result.Count) comptes traites. Rapport : $Rapport"
+}`},
+
+{id:'ad3',cat:'ad',title:'Export membres de groupe (récursif)',desc:"Exporte récursivement tous les membres d'un groupe AD, y compris les groupes imbriqués.",tags:['groupes','rapport','export'],
+code:`function Get-ADGroupMembersReport {
+    param(
+        [Parameter(Mandatory)][string]$GroupName,
+        [string]$Output = "C:\\Logs\\Groupe_$GroupName.csv"
+    )
+
+    function Get-Recursive {
+        param([string]$Group, [string]$Parent = "Direct")
+        Get-ADGroupMember -Identity $Group | ForEach-Object {
+            if ($_.objectClass -eq 'group') {
+                Get-Recursive -Group $_.SamAccountName -Parent $Group
+            } else {
+                $U = Get-ADUser $_.SamAccountName -Properties EmailAddress,Department,Enabled
+                [PSCustomObject]@{
+                    Login        = $U.SamAccountName
+                    Nom          = $U.Name
+                    Email        = $U.EmailAddress
+                    Departement  = $U.Department
+                    Actif        = $U.Enabled
+                    GroupeParent = $Parent
+                }
+            }
+        }
+    }
+
+    $Membres = Get-Recursive -Group $GroupName
+    $Membres | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Membres.Count) membres exportes vers $Output"
+}`},
+
+{id:'ad4',cat:'ad',title:'Reset mot de passe + déverrouillage',desc:"Réinitialise le mot de passe, déverrouille le compte et force le changement à la connexion.",tags:['users','password','unlock'],
+code:`function Reset-ADUserPassword {
+    param(
+        [Parameter(Mandatory)][string]$SamAccountName,
+        [string]$NewPassword = ""
+    )
+
+    if (-not $NewPassword) {
+        Add-Type -AssemblyName System.Web
+        $NewPassword = [System.Web.Security.Membership]::GeneratePassword(14,3)
+    }
+
+    $SecurePwd = ConvertTo-SecureString $NewPassword -AsPlainText -Force
+
+    try {
+        Unlock-ADAccount      -Identity $SamAccountName
+        Set-ADAccountPassword -Identity $SamAccountName -NewPassword $SecurePwd -Reset
+        Set-ADUser            -Identity $SamAccountName -ChangePasswordAtLogon $true
+
+        Write-Host "Compte $SamAccountName reinitialise." -ForegroundColor Green
+        Write-Host "Mot de passe : $NewPassword"
+        return $NewPassword
+    } catch {
+        Write-Error "Erreur : $_"
+    }
+}`},
+
+{id:'ad5',cat:'ad',title:'Sync attributs depuis CSV (RH)',desc:"Met à jour titre, département, manager et téléphone des utilisateurs AD depuis un export RH CSV.",tags:['users','import','RH'],
+code:`# CSV requis : SamAccountName, Title, Department, Manager, PhoneNumber
+function Sync-ADUsersFromCSV {
+    param(
+        [Parameter(Mandatory)][string]$CSVPath,
+        [switch]$WhatIf
+    )
+
+    $Users   = Import-Csv -Path $CSVPath -Encoding UTF8
+    $Results = foreach ($Row in $Users) {
+        try {
+            $Params = @{
+                Identity    = $Row.SamAccountName
+                Title       = $Row.Title
+                Department  = $Row.Department
+                OfficePhone = $Row.PhoneNumber
+            }
+            if ($Row.Manager) {
+                $Params.Manager = (Get-ADUser $Row.Manager).DistinguishedName
+            }
+            if (-not $WhatIf) { Set-ADUser @Params }
+            [PSCustomObject]@{ User=$Row.SamAccountName; Status="OK" }
+        } catch {
+            [PSCustomObject]@{ User=$Row.SamAccountName; Status="ERREUR"; Detail=$_.Exception.Message }
+        }
+    }
+
+    $Results | Format-Table -AutoSize
+    Write-Host "OK:$(($Results|Where-Object Status -eq 'OK').Count)  Erreurs:$(($Results|Where-Object Status -eq 'ERREUR').Count)"
+}`},
+
+{id:'ad6',cat:'ad',title:'Rapport comptes expirés AD',desc:"Identifie tous les comptes dont la date d'expiration est dépassée ou proche, avec export CSV.",tags:['users','audit','expiration'],
+code:`function Get-ADExpiredAccounts {
+    param(
+        [int]$ExpirantDans = 30,
+        [string]$Output    = "C:\\Logs\\ComptesExpires_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Now    = Get-Date
+    $Limite = $Now.AddDays($ExpirantDans)
+
+    $Comptes = Get-ADUser -Filter { Enabled -eq $true } `
+        -Properties AccountExpirationDate, Department, EmailAddress |
+    Where-Object {
+        $_.AccountExpirationDate -and $_.AccountExpirationDate -lt $Limite
+    }
+
+    $Rapport = $Comptes | ForEach-Object {
+        [PSCustomObject]@{
+            Login          = $_.SamAccountName
+            Nom            = $_.Name
+            Email          = $_.EmailAddress
+            Departement    = $_.Department
+            Expiration     = $_.AccountExpirationDate
+            Statut         = if ($_.AccountExpirationDate -lt $Now) { "EXPIRE" } else { "EXPIRE BIENTOT" }
+            JoursRestants  = [math]::Round(($_.AccountExpirationDate - $Now).TotalDays)
+        }
+    } | Sort-Object JoursRestants
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Warning "$($Rapport.Count) compte(s) expires ou expirant dans $ExpirantDans jours."
+    $Rapport | Format-Table Login, Statut, JoursRestants -AutoSize
+}`},
+
+{id:'ad7',cat:'ad',title:'Créer un groupe AD et ajouter membres',desc:"Crée un groupe AD (Sécurité ou Distribution) et y ajoute une liste de membres depuis un tableau.",tags:['groupes','création'],
+code:`function New-ADGroupWithMembers {
+    param(
+        [Parameter(Mandatory)][string]$NomGroupe,
+        [Parameter(Mandatory)][string]$OU,
+        [string]$Description   = "",
+        [string]$GroupCategory = "Security",   # Security | Distribution
+        [string]$GroupScope    = "Global",     # DomainLocal | Global | Universal
+        [string[]]$Membres     = @()
+    )
+
+    try {
+        New-ADGroup -Name $NomGroupe `
+            -SamAccountName $NomGroupe `
+            -GroupCategory $GroupCategory `
+            -GroupScope $GroupScope `
+            -Path $OU `
+            -Description $Description
+
+        Write-Host "Groupe $NomGroupe cree." -ForegroundColor Green
+
+        if ($Membres.Count -gt 0) {
+            Add-ADGroupMember -Identity $NomGroupe -Members $Membres
+            Write-Host "$($Membres.Count) membre(s) ajoute(s)."
+        }
+    } catch {
+        Write-Error "Erreur : $_"
+    }
+}`},
+
+// ── EXCHANGE ONLINE ────────────────────────
+{id:'exo1',cat:'exo',title:'Connexion Exchange Online (safe)',desc:"Connexion à Exchange Online avec détection de session existante et installation automatique du module.",tags:['connexion','auth'],
+code:`function Connect-EXOSafe {
+    param(
+        [string]$UPN   = "",
+        [switch]$Force
+    )
+
+    if (-not $Force) {
+        try {
+            if (Get-ConnectionInformation -ErrorAction Stop) {
+                Write-Host "Deja connecte a Exchange Online." -ForegroundColor Green
+                return
+            }
+        } catch {}
+    }
+
+    if (-not (Get-Module -ListAvailable ExchangeOnlineManagement)) {
+        Write-Host "Installation du module ExchangeOnlineManagement..."
+        Install-Module ExchangeOnlineManagement -Force -Scope CurrentUser
+    }
+
+    Import-Module ExchangeOnlineManagement
+    $P = @{ ShowBanner = $false }
+    if ($UPN) { $P.UserPrincipalName = $UPN }
+
+    try {
+        Connect-ExchangeOnline @P
+        Write-Host "Connecte a Exchange Online." -ForegroundColor Green
+    } catch {
+        Write-Error "Connexion impossible : $_"
+    }
+}`},
+
+{id:'exo2',cat:'exo',title:'Rapport taille des boîtes aux lettres',desc:"Génère un rapport trié par taille de toutes les boîtes Exchange Online avec quota et dernière connexion.",tags:['mailbox','rapport','storage'],
+code:`function Get-MailboxSizeReport {
+    param(
+        [string]$Output = "C:\\Logs\\MailboxSizes_$(Get-Date -f yyyyMMdd).csv",
+        [int]$Top = 0
+    )
+
+    $Mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails UserMailbox
+    $Report = $Mailboxes | ForEach-Object {
+        $Stats  = Get-MailboxStatistics -Identity $_.ExchangeGuid
+        $SizeMB = [math]::Round($Stats.TotalItemSize.Value.ToBytes() / 1MB, 2)
+        [PSCustomObject]@{
+            DisplayName       = $_.DisplayName
+            UPN               = $_.UserPrincipalName
+            TailleMB          = $SizeMB
+            NbItems           = $Stats.ItemCount
+            DerniereConnexion = $Stats.LastLogonTime
+            Quota             = $_.ProhibitSendReceiveQuota
+        }
+    } | Sort-Object TailleMB -Descending
+
+    if ($Top -gt 0) { $Report = $Report | Select-Object -First $Top }
+    $Report | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Report.Count) boites exportees vers $Output"
+}`},
+
+{id:'exo3',cat:'exo',title:'Créer boîte partagée + permissions',desc:"Crée une boîte partagée Exchange Online et attribue FullAccess + SendAs à une liste d'utilisateurs.",tags:['mailbox','shared','permissions'],
+code:`function New-SharedMailboxComplete {
+    param(
+        [Parameter(Mandatory)][string]$DisplayName,
+        [Parameter(Mandatory)][string]$Alias,
+        [string]$Domain         = "contoso.com",
+        [string[]]$FullAccessTo = @(),
+        [string[]]$SendAsTo     = @()
+    )
+
+    $Email = "$Alias@$Domain"
+
+    try {
+        New-Mailbox -Shared -Name $DisplayName -DisplayName $DisplayName \`
+            -Alias $Alias -PrimarySmtpAddress $Email
+        Write-Host "Boite $Email creee." -ForegroundColor Green
+        Start-Sleep -Seconds 5
+
+        foreach ($U in $FullAccessTo) {
+            Add-MailboxPermission -Identity $Email -User $U \`
+                -AccessRights FullAccess -InheritanceType All -AutoMapping $true
+            Write-Host "  FullAccess : $U"
+        }
+        foreach ($U in $SendAsTo) {
+            Add-RecipientPermission -Identity $Email -Trustee $U \`
+                -AccessRights SendAs -Confirm:$false
+            Write-Host "  SendAs : $U"
+        }
+    } catch {
+        Write-Error "Erreur : $_"
+    }
+}`},
+
+{id:'exo4',cat:'exo',title:'Audit des forwards externes',desc:"Détecte toutes les boîtes avec un transfert automatique vers une adresse externe — risque de fuite.",tags:['audit','sécurité','forward'],
+code:`function Get-ExternalForwardAudit {
+    param(
+        [string]$Output = "C:\\Logs\\ExternalForwards_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Forwards = Get-Mailbox -ResultSize Unlimited |
+        Where-Object { $_.ForwardingAddress -or $_.ForwardingSmtpAddress } |
+        ForEach-Object {
+            [PSCustomObject]@{
+                UPN         = $_.UserPrincipalName
+                DisplayName = $_.DisplayName
+                ForwardVers = $_.ForwardingSmtpAddress ?? $_.ForwardingAddress
+                GarderCopie = $_.DeliverToMailboxAndForward
+                Detecte     = Get-Date -Format "yyyy-MM-dd HH:mm"
+            }
+        }
+
+    if ($Forwards.Count -eq 0) {
+        Write-Host "Aucun forward externe detecte." -ForegroundColor Green
+        return
+    }
+    $Forwards | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Warning "$($Forwards.Count) forward(s) externe(s) detecte(s) ! Rapport : $Output"
+    $Forwards | Format-Table -AutoSize
+}`},
+
+{id:'exo5',cat:'exo',title:'Règle de transport personnalisée',desc:"Crée une règle Exchange Online pour bloquer, rediriger ou tagguer des emails selon des critères.",tags:['transport','sécurité','règles'],
+code:`function New-CustomTransportRule {
+    param(
+        [Parameter(Mandatory)][string]$Nom,
+        [string[]]$DomainesBloqués = @(),
+        [string[]]$MotsClésSujet   = @(),
+        [string]$Action            = "Reject",
+        [string]$RedirectVers      = "",
+        [string]$MessageRefus      = "Message bloque par la politique de securite."
+    )
+
+    $P = @{ Name=$Nom; Priority=0; Enabled=$true }
+    if ($DomainesBloqués) { $P.SenderDomainIs       = $DomainesBloqués }
+    if ($MotsClésSujet)   { $P.SubjectContainsWords = $MotsClésSujet   }
+
+    switch ($Action) {
+        "Reject"    { $P.RejectMessageReasonText = $MessageRefus }
+        "Redirect"  { $P.RedirectMessageTo = $RedirectVers }
+        "AddHeader" { $P.SetHeaderName="X-Flag"; $P.SetHeaderValue="Suspicious" }
+    }
+
+    try {
+        New-TransportRule @P
+        Write-Host "Regle '$Nom' creee." -ForegroundColor Green
+    } catch {
+        Write-Error "Erreur : $_"
+    }
+}`},
+
+{id:'exo6',cat:'exo',title:'Rapport listes de distribution',desc:"Exporte toutes les listes de distribution avec leur nombre de membres et adresse email principale.",tags:['groupes','rapport','distribution'],
+code:`function Get-DistributionListReport {
+    param(
+        [string]$Output = "C:\\Logs\\DistribLists_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Lists = Get-DistributionGroup -ResultSize Unlimited
+
+    $Rapport = $Lists | ForEach-Object {
+        $Members = Get-DistributionGroupMember -Identity $_.PrimarySmtpAddress -ResultSize Unlimited
+        [PSCustomObject]@{
+            Nom          = $_.DisplayName
+            Email        = $_.PrimarySmtpAddress
+            NbMembres    = $Members.Count
+            ManagedBy    = ($_.ManagedBy -join "; ")
+            RequiresSenderAuthenticationEnabled = $_.RequireSenderAuthenticationEnabled
+            CreationDate = $_.WhenCreated
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Rapport.Count) listes exportees vers $Output"
+}`},
+
+// ── ENTRA ID / AAD ─────────────────────────
+{id:'aad1',cat:'aad',title:'Connexion Microsoft Graph / Entra',desc:"Connexion à Microsoft Graph avec support interactif et App Registration pour l'automatisation.",tags:['connexion','auth'],
+code:`function Connect-MgGraphSafe {
+    param(
+        [string[]]$Scopes = @("User.Read.All","Group.ReadWrite.All","Directory.Read.All"),
+        [string]$TenantId     = "",
+        [string]$ClientId     = "",
+        [string]$ClientSecret = ""
+    )
+
+    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {
+        Write-Host "Installation Microsoft.Graph..."
+        Install-Module Microsoft.Graph -Force -Scope CurrentUser
+    }
+
+    if ($ClientId -and $ClientSecret -and $TenantId) {
+        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
+        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)
+        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred
+        Write-Host "Connecte via App Registration." -ForegroundColor Green
+    } else {
+        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId
+        Write-Host "Connecte de facon interactive." -ForegroundColor Green
+    }
+}`},
+
+{id:'aad2',cat:'aad',title:'Rapport licences Entra ID',desc:"Liste les licences par utilisateur et identifie les comptes inactifs depuis 90j avec licences actives.",tags:['licences','rapport','audit'],
+code:`function Get-EntraLicenseReport {
+    param(
+        [string]$Output = "C:\\Logs\\Licences_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $SkuMap = @{}
+    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }
+
+    $Rapport = Get-MgUser -All \`
+        -Property DisplayName,UserPrincipalName,AssignedLicenses,SignInActivity |
+    ForEach-Object {
+        $Lics = $_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] ?? $_.SkuId }
+        $Cnx  = $_.SignInActivity?.LastSignInDateTime
+        [PSCustomObject]@{
+            DisplayName        = $_.DisplayName
+            UPN                = $_.UserPrincipalName
+            Licences           = ($Lics -join "; ")
+            NbLicences         = $Lics.Count
+            DerniereConnexion  = $Cnx
+            InactifAvecLicence = ($Cnx -lt (Get-Date).AddDays(-90) -and $Lics.Count -gt 0)
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    $N = ($Rapport | Where-Object InactifAvecLicence).Count
+    Write-Warning "$N utilisateurs inactifs ont encore des licences."
+}`},
+
+{id:'aad3',cat:'aad',title:'Révoquer sessions utilisateur',desc:"Révoque tous les tokens d'un utilisateur compromis en urgence. Option pour désactiver le compte.",tags:['sécurité','incident','tokens'],
+code:`function Revoke-EntraUserSessions {
+    param(
+        [Parameter(Mandatory)][string[]]$UPNs,
+        [switch]$DisableAccount
+    )
+
+    foreach ($UPN in $UPNs) {
+        try {
+            $User = Get-MgUser -UserId $UPN -ErrorAction Stop
+            Revoke-MgUserSignInSession -UserId $User.Id
+            Write-Host "Sessions revoquees : $UPN" -ForegroundColor Green
+
+            if ($DisableAccount) {
+                Update-MgUser -UserId $User.Id -AccountEnabled:$false
+                Write-Warning "Compte desactive : $UPN"
+            }
+        } catch {
+            Write-Error "Erreur pour $UPN : $_"
+        }
+    }
+}`},
+
+{id:'aad4',cat:'aad',title:'Audit accès conditionnel (CA)',desc:"Liste toutes les politiques CA avec état, utilisateurs/groupes ciblés, apps et contrôles (MFA...).",tags:['CA','sécurité','audit'],
+code:`function Get-ConditionalAccessAudit {
+    param(
+        [string]$Output = "C:\\Logs\\CA_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Rapport = Get-MgIdentityConditionalAccessPolicy | ForEach-Object {
+        [PSCustomObject]@{
+            Nom         = $_.DisplayName
+            Statut      = $_.State
+            UsersIncl   = ($_.Conditions.Users.IncludeUsers   -join "; ")
+            GroupesIncl = ($_.Conditions.Users.IncludeGroups  -join "; ")
+            AppsIncl    = ($_.Conditions.Applications.IncludeApplications -join "; ")
+            Controles   = ($_.GrantControls?.BuiltInControls  -join "; ")
+            MFA         = ($_.GrantControls?.BuiltInControls -contains "mfa")
+            Cree        = $_.CreatedDateTime
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Rapport.Count) politiques CA exportees."
+    $Rapport | Format-Table Nom, Statut, MFA -AutoSize
+}`},
+
+// ── MICROSOFT GRAPH ────────────────────────
+{id:'graph1',cat:'graph',title:'Wrapper REST Graph + pagination auto',desc:"Appel générique à n'importe quel endpoint Graph avec suivi automatique de la pagination.",tags:['api','rest','pagination'],
+code:`function Invoke-GraphAPI {
+    param(
+        [Parameter(Mandatory)][string]$Endpoint,
+        [string]$Method = "GET",
+        [object]$Body   = $null,
+        [switch]$GetAll
+    )
+
+    $Token   = (Get-MgContext).AccessToken
+    $Headers = @{
+        Authorization  = "Bearer $Token"
+        "Content-Type" = "application/json"
+    }
+    $URL   = "https://graph.microsoft.com/v1.0/$($Endpoint.TrimStart('/'))"
+    $Items = [System.Collections.Generic.List[object]]::new()
+
+    do {
+        $P = @{ Uri=$URL; Method=$Method; Headers=$Headers }
+        if ($Body -and $Method -ne "GET") {
+            $P.Body = ($Body | ConvertTo-Json -Depth 10)
+        }
+        $R = Invoke-RestMethod @P
+
+        if ($R.value) { $Items.AddRange($R.value) }
+        else          { return $R }
+
+        $URL = $R."@odata.nextLink"
+    } while ($GetAll -and $URL)
+
+    return $Items
+}`},
+
+{id:'graph2',cat:'graph',title:'Envoyer un email via Graph (SendMail)',desc:"Envoie un email HTML avec pièces jointes optionnelles via Microsoft Graph depuis n'importe quelle boîte.",tags:['email','sendmail','notification'],
+code:`function Send-GraphMail {
+    param(
+        [Parameter(Mandatory)][string]$From,
+        [Parameter(Mandatory)][string[]]$To,
+        [Parameter(Mandatory)][string]$Subject,
+        [Parameter(Mandatory)][string]$Body,
+        [string]$BodyType  = "HTML",
+        [string[]]$CC      = @(),
+        [string[]]$Pieces  = @()
+    )
+
+    $ToList = $To | ForEach-Object { @{ emailAddress=@{ address=$_ } } }
+    $CCList = $CC | ForEach-Object { @{ emailAddress=@{ address=$_ } } }
+    $Attach = $Pieces | ForEach-Object {
+        @{
+            "@odata.type" = "#microsoft.graph.fileAttachment"
+            name          = [IO.Path]::GetFileName($_)
+            contentBytes  = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_))
+        }
+    }
+
+    $Payload = @{
+        message = @{
+            subject      = $Subject
+            body         = @{ contentType=$BodyType; content=$Body }
+            toRecipients = $ToList
+            ccRecipients = $CCList
+            attachments  = $Attach
+        }
+        saveToSentItems = $true
+    }
+
+    $UserId = (Get-MgUser -UserId $From).Id
+    Invoke-MgGraphRequest -Method POST \`
+        -Uri "users/$UserId/sendMail" \`
+        -Body ($Payload | ConvertTo-Json -Depth 10)
+
+    Write-Host "Email envoye depuis $From." -ForegroundColor Green
+}`},
+
+{id:'graph3',cat:'graph',title:'Rapport connexions risquées',desc:"Récupère les utilisateurs à risque détectés par Entra ID Protection avec niveau, état et détail.",tags:['sécurité','risque','identity'],
+code:`function Get-RiskyUsersReport {
+    param(
+        [string]$RiskLevel = "high",
+        [string]$Output    = "C:\\Logs\\RiskyUsers_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $URI    = "identityProtection/riskyUsers?\$filter=riskLevel eq '$RiskLevel'"
+    $Result = Invoke-MgGraphRequest -Method GET -Uri $URI
+
+    $Rapport = $Result.value | ForEach-Object {
+        [PSCustomObject]@{
+            UPN         = $_.userPrincipalName
+            Nom         = $_.userDisplayName
+            RiskLevel   = $_.riskLevel
+            RiskState   = $_.riskState
+            RiskDetail  = $_.riskDetail
+            DerniereMAJ = $_.riskLastUpdatedDateTime
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Warning "$($Rapport.Count) utilisateur(s) a risque '$RiskLevel' detecte(s)."
+    return $Rapport
+}`},
+
+{id:'graph4',cat:'graph',title:'Créer un channel Microsoft Teams',desc:"Crée automatiquement un channel standard ou privé dans une équipe Teams existante via Graph API.",tags:['teams','channel','collaboration'],
+code:`function New-TeamsChannel {
+    param(
+        [Parameter(Mandatory)][string]$TeamId,
+        [Parameter(Mandatory)][string]$Nom,
+        [string]$Description = "",
+        [string]$Type        = "standard"
+    )
+
+    $Body = @{
+        displayName    = $Nom
+        description    = $Description
+        membershipType = $Type
+    } | ConvertTo-Json
+
+    try {
+        $R = Invoke-MgGraphRequest \`
+            -Method POST \`
+            -Uri "teams/$TeamId/channels" \`
+            -Body $Body \`
+            -ContentType "application/json"
+
+        Write-Host "Channel '$Nom' cree." -ForegroundColor Green
+        Write-Host "URL : $($R.webUrl)"
+        return $R
+    } catch {
+        Write-Error "Erreur : $_"
+    }
+}`},
+
+// ── INTUNE / MEM ───────────────────────────
+{id:'intune1',cat:'intune',title:'Connexion Intune via Graph',desc:"Connexion à Microsoft Graph avec les scopes nécessaires pour gérer Intune / Microsoft Endpoint Manager.",tags:['connexion','auth'],
+code:`function Connect-IntuneGraph {
+    param(
+        [string]$TenantId     = "",
+        [string]$ClientId     = "",
+        [string]$ClientSecret = ""
+    )
+
+    $Scopes = @(
+        "DeviceManagementManagedDevices.ReadWrite.All",
+        "DeviceManagementConfiguration.ReadWrite.All",
+        "DeviceManagementApps.ReadWrite.All",
+        "DeviceManagementServiceConfig.ReadWrite.All"
+    )
+
+    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {
+        Install-Module Microsoft.Graph -Force -Scope CurrentUser
+    }
+
+    if ($ClientId -and $ClientSecret -and $TenantId) {
+        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
+        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)
+        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred
+    } else {
+        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId
+    }
+
+    Write-Host "Connecte a Intune via Graph." -ForegroundColor Green
+}`},
+
+{id:'intune2',cat:'intune',title:'Rapport inventaire appareils Intune',desc:"Exporte tous les appareils gérés par Intune avec OS, conformité, dernier check-in et utilisateur.",tags:['appareils','rapport','inventaire'],
+code:`function Get-IntuneDeviceInventory {
+    param(
+        [string]$Output = "C:\\Logs\\IntuneDevices_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Devices = Get-MgDeviceManagementManagedDevice -All
+
+    $Rapport = $Devices | ForEach-Object {
+        [PSCustomObject]@{
+            Nom               = $_.DeviceName
+            Utilisateur       = $_.UserPrincipalName
+            OS                = $_.OperatingSystem
+            Version           = $_.OsVersion
+            Conformite        = $_.ComplianceState
+            GestionType       = $_.ManagementAgent
+            DernierCheckIn    = $_.LastSyncDateTime
+            Fabricant         = $_.Manufacturer
+            Modele            = $_.Model
+            NumeroSerie       = $_.SerialNumber
+            Chiffrement       = $_.IsEncrypted
+            DeviceId          = $_.Id
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Rapport.Count) appareils exportes vers $Output"
+
+    $NonConformes = ($Rapport | Where-Object Conformite -ne "compliant").Count
+    if ($NonConformes -gt 0) {
+        Write-Warning "$NonConformes appareil(s) non conformes."
+    }
+}`},
+
+{id:'intune3',cat:'intune',title:'Forcer sync appareil Intune',desc:"Force la synchronisation immédiate d'un ou plusieurs appareils Intune avec le serveur MDM.",tags:['appareils','sync','gestion'],
+code:`function Invoke-IntuneDeviceSync {
+    param(
+        [Parameter(Mandatory)][string[]]$DeviceNames
+    )
+
+    foreach ($Name in $DeviceNames) {
+        try {
+            $Device = Get-MgDeviceManagementManagedDevice -Filter "deviceName eq '$Name'" |
+                      Select-Object -First 1
+
+            if (-not $Device) {
+                Write-Warning "Appareil '$Name' introuvable dans Intune."
+                continue
+            }
+
+            Invoke-MgDeviceManagementManagedDeviceSyncDevice -ManagedDeviceId $Device.Id
+            Write-Host "Sync forcee : $Name ($($Device.Id))" -ForegroundColor Green
+        } catch {
+            Write-Error "Erreur pour $Name : $_"
+        }
+    }
+}`},
+
+{id:'intune4',cat:'intune',title:'Rapport appareils non conformes',desc:"Identifie tous les appareils non conformes aux politiques Intune avec détail des raisons de non-conformité.",tags:['conformité','audit','rapport'],
+code:`function Get-IntuneNonCompliantDevices {
+    param(
+        [string]$Output = "C:\\Logs\\NonConformes_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Devices = Get-MgDeviceManagementManagedDevice -All |
+               Where-Object { $_.ComplianceState -ne "compliant" }
+
+    $Rapport = $Devices | ForEach-Object {
+        $DevId = $_.Id
+
+        # Récupérer les états de conformité par politique
+        $States = Get-MgDeviceManagementManagedDeviceCompliancePolicyState `
+            -ManagedDeviceId $DevId -ErrorAction SilentlyContinue
+
+        $Raisons = ($States | Where-Object State -ne "compliant" |
+            ForEach-Object { $_.DisplayName }) -join "; "
+
+        [PSCustomObject]@{
+            Nom            = $_.DeviceName
+            Utilisateur    = $_.UserPrincipalName
+            OS             = $_.OperatingSystem
+            Conformite     = $_.ComplianceState
+            DernierCheckIn = $_.LastSyncDateTime
+            RaisonsNC      = $Raisons
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Warning "$($Rapport.Count) appareil(s) non conformes exportes."
+    $Rapport | Format-Table Nom, Conformite, RaisonsNC -AutoSize
+}`},
+
+{id:'intune5',cat:'intune',title:'Déployer une app Intune (Win32)',desc:"Liste les applications Win32 déployées dans Intune et leur statut d'installation par appareil.",tags:['apps','déploiement','rapport'],
+code:`function Get-IntuneAppDeploymentStatus {
+    param(
+        [Parameter(Mandatory)][string]$AppName,
+        [string]$Output = "C:\\Logs\\AppStatus_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    # Trouver l'app par nom
+    $App = Get-MgDeviceAppManagementMobileApp -Filter "displayName eq '$AppName'" |
+           Select-Object -First 1
+
+    if (-not $App) {
+        Write-Error "Application '$AppName' introuvable dans Intune."
+        return
+    }
+
+    Write-Host "App trouvee : $($App.DisplayName) [$($App.Id)]"
+
+    # Statuts d'installation
+    $States = Get-MgDeviceAppManagementMobileAppDeviceStatuses `
+        -MobileAppId $App.Id -All
+
+    $Rapport = $States | ForEach-Object {
+        [PSCustomObject]@{
+            Appareil        = $_.DeviceName
+            Utilisateur     = $_.UserPrincipalName
+            StatutInstall   = $_.InstallState
+            DerniereMAJ     = $_.LastSyncDateTime
+            ErrorCode       = $_.ErrorCode
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    $Installed = ($Rapport | Where-Object StatutInstall -eq "installed").Count
+    Write-Host "Installe : $Installed / $($Rapport.Count) appareils."
+}`},
+
+{id:'intune6',cat:'intune',title:'Wipe / Reset appareil Intune',desc:"Effectue un wipe complet ou un reset usine sur un appareil géré Intune avec confirmation obligatoire.",tags:['appareils','wipe','sécurité'],
+code:`function Invoke-IntuneDeviceWipe {
+    param(
+        [Parameter(Mandatory)][string]$DeviceName,
+        [switch]$KeepUserData,   # Wipe partiel (retire seulement les données corp)
+        [switch]$Force
+    )
+
+    $Device = Get-MgDeviceManagementManagedDevice `
+        -Filter "deviceName eq '$DeviceName'" | Select-Object -First 1
+
+    if (-not $Device) {
+        Write-Error "Appareil '$DeviceName' introuvable."
+        return
+    }
+
+    Write-Host "ATTENTION : Operation irreversible sur $DeviceName" -ForegroundColor Red
+    Write-Host "Utilisateur : $($Device.UserPrincipalName)"
+    Write-Host "OS          : $($Device.OperatingSystem) $($Device.OsVersion)"
+
+    if (-not $Force) {
+        $Confirm = Read-Host "Taper OUI pour confirmer"
+        if ($Confirm -ne "OUI") { Write-Host "Operation annulee."; return }
+    }
+
+    try {
+        if ($KeepUserData) {
+            # Retire compte corp, garde donnees perso (Retire)
+            Invoke-MgRetireDeviceManagementManagedDevice -ManagedDeviceId $Device.Id
+            Write-Host "Retire (donnees corp supprimees) : $DeviceName" -ForegroundColor Yellow
+        } else {
+            # Wipe complet
+            Invoke-MgWipeDeviceManagementManagedDevice -ManagedDeviceId $Device.Id
+            Write-Host "Wipe complet lance sur : $DeviceName" -ForegroundColor Red
+        }
+    } catch {
+        Write-Error "Erreur wipe : $_"
+    }
+}`},
+
+{id:'intune7',cat:'intune',title:'Rapport profils de configuration',desc:"Liste tous les profils de configuration Intune avec leur plateforme, type et nombre d'appareils assignés.",tags:['configuration','profils','rapport'],
+code:`function Get-IntuneConfigProfileReport {
+    param(
+        [string]$Output = "C:\\Logs\\ConfigProfiles_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Profiles = Get-MgDeviceManagementDeviceConfiguration -All
+
+    $Rapport = $Profiles | ForEach-Object {
+        $Assignments = Get-MgDeviceManagementDeviceConfigurationAssignment `
+            -DeviceConfigurationId $_.Id -ErrorAction SilentlyContinue
+
+        [PSCustomObject]@{
+            Nom           = $_.DisplayName
+            Plateforme    = $_.AdditionalProperties["@odata.type"] -replace "#microsoft.graph.",""
+            Description   = $_.Description
+            NbAssignments = $Assignments.Count
+            CreeLe        = $_.CreatedDateTime
+            ModifieLe     = $_.LastModifiedDateTime
+            Id            = $_.Id
+        }
+    }
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Rapport.Count) profils exportes vers $Output"
+    $Rapport | Format-Table Nom, Plateforme, NbAssignments -AutoSize
+}`},
+
+{id:'intune8',cat:'intune',title:'Assigner une policy Intune à un groupe',desc:"Assigne une politique de conformité ou de configuration Intune à un groupe Entra ID.",tags:['policy','groupes','assignation'],
+code:`function Add-IntunePolicyAssignment {
+    param(
+        [Parameter(Mandatory)][string]$PolicyId,
+        [Parameter(Mandatory)][string]$GroupId,
+        [string]$PolicyType = "compliancePolicy"
+        # compliancePolicy | configurationPolicy
+    )
+
+    $Assignment = @{
+        target = @{
+            "@odata.type" = "#microsoft.graph.groupAssignmentTarget"
+            groupId       = $GroupId
+        }
+    }
+
+    try {
+        switch ($PolicyType) {
+            "compliancePolicy" {
+                New-MgDeviceManagementDeviceCompliancePolicyAssignment \`
+                    -DeviceCompliancePolicyId $PolicyId \`
+                    -BodyParameter $Assignment
+            }
+            "configurationPolicy" {
+                New-MgDeviceManagementDeviceConfigurationAssignment \`
+                    -DeviceConfigurationId $PolicyId \`
+                    -BodyParameter $Assignment
+            }
+        }
+        Write-Host "Policy $PolicyId assignee au groupe $GroupId." -ForegroundColor Green
+    } catch {
+        Write-Error "Erreur assignation : $_"
+    }
+}`},
+
+{id:'intune9',cat:'intune',title:'Script de remédiation Intune',desc:"Crée et déploie un script de détection + remédiation Intune (Proactive Remediation) via Graph API.",tags:['remédiation','scripts','proactive'],
+code:`function New-IntuneRemediationScript {
+    param(
+        [Parameter(Mandatory)][string]$Nom,
+        [Parameter(Mandatory)][string]$DetectionScriptPath,
+        [Parameter(Mandatory)][string]$RemediationScriptPath,
+        [string]$Publisher  = "IT Admin",
+        [string]$RunAs      = "system"  # system | user
+    )
+
+    $DetectionB64   = [Convert]::ToBase64String(
+        [System.Text.Encoding]::UTF8.GetBytes((Get-Content $DetectionScriptPath -Raw))
+    )
+    $RemediationB64 = [Convert]::ToBase64String(
+        [System.Text.Encoding]::UTF8.GetBytes((Get-Content $RemediationScriptPath -Raw))
+    )
+
+    $Body = @{
+        displayName                = $Nom
+        publisher                  = $Publisher
+        runAs32Bit                 = $false
+        runAsAccount               = $RunAs
+        detectionScriptContent     = $DetectionB64
+        remediationScriptContent   = $RemediationB64
+        enforceSignatureCheck      = $false
+    } | ConvertTo-Json
+
+    try {
+        $Result = Invoke-MgGraphRequest -Method POST \`
+            -Uri "deviceManagement/deviceHealthScripts" \`
+            -Body $Body \`
+            -ContentType "application/json"
+
+        Write-Host "Script de remediation '$Nom' cree : $($Result.id)" -ForegroundColor Green
+        return $Result
+    } catch {
+        Write-Error "Erreur creation : $_"
+    }
+}`},
+
+{id:'intune10',cat:'intune',title:'Rapport applications installées par appareil',desc:"Génère un inventaire de toutes les applications détectées sur chaque appareil Intune géré.",tags:['apps','inventaire','rapport'],
+code:`function Get-IntuneInstalledAppsReport {
+    param(
+        [Parameter(Mandatory)][string]$DeviceName,
+        [string]$Output = "C:\\Logs\\Apps_$DeviceName`_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Device = Get-MgDeviceManagementManagedDevice \`
+        -Filter "deviceName eq '$DeviceName'" | Select-Object -First 1
+
+    if (-not $Device) {
+        Write-Error "Appareil '$DeviceName' introuvable."
+        return
+    }
+
+    $Apps = Get-MgDeviceManagementManagedDeviceDetectedApp \`
+        -ManagedDeviceId $Device.Id -All
+
+    $Rapport = $Apps | ForEach-Object {
+        [PSCustomObject]@{
+            Application = $_.DisplayName
+            Version     = $_.Version
+            Taille      = $_.SizeInByte
+            Editeur     = $_.Publisher
+        }
+    } | Sort-Object Application
+
+    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    Write-Host "$($Rapport.Count) applications trouvees sur $DeviceName."
+}`},
+
+{id:'intune11',cat:'intune',title:'Autopilot — Importer des appareils',desc:"Importe des appareils dans Windows Autopilot depuis un fichier CSV (hash matériel) via Graph API.",tags:['autopilot','import','déploiement'],
+code:`function Import-AutopilotDevices {
+    param(
+        [Parameter(Mandatory)][string]$CSVPath
+        # CSV requis : Device Serial Number, Windows Product ID, Hardware Hash
+    )
+
+    $Devices = Import-Csv -Path $CSVPath
+
+    $Results = foreach ($D in $Devices) {
+        $Body = @{
+            "@odata.type"        = "#microsoft.graph.importedWindowsAutopilotDeviceIdentity"
+            serialNumber         = $D."Device Serial Number"
+            productKey           = $D."Windows Product ID"
+            hardwareIdentifier   = $D."Hardware Hash"
+            assignedUserPrincipalName = ""
+        } | ConvertTo-Json
+
+        try {
+            $R = Invoke-MgGraphRequest -Method POST \`
+                -Uri "deviceManagement/importedWindowsAutopilotDeviceIdentities" \`
+                -Body $Body \`
+                -ContentType "application/json"
+
+            [PSCustomObject]@{ Serial=$D."Device Serial Number"; Status="Importe"; Id=$R.id }
+        } catch {
+            [PSCustomObject]@{ Serial=$D."Device Serial Number"; Status="ERREUR"; Detail=$_.Exception.Message }
+        }
+    }
+
+    $Results | Format-Table -AutoSize
+    Write-Host "Importes : $(($Results|Where-Object Status -eq 'Importe').Count) / $($Results.Count)"
+}`},
+
+{id:'intune12',cat:'intune',title:'Rapport politique de conformité par OS',desc:"Résumé de conformité Intune regroupé par système d'exploitation avec statistiques de conformité.",tags:['conformité','rapport','OS'],
+code:`function Get-IntuneComplianceSummaryByOS {
+    param(
+        [string]$Output = "C:\\Logs\\ComplianceSummary_$(Get-Date -f yyyyMMdd).csv"
+    )
+
+    $Devices = Get-MgDeviceManagementManagedDevice -All
+
+    $Summary = $Devices |
+        Group-Object OperatingSystem |
+        ForEach-Object {
+            $OSDevices  = $_.Group
+            $Conformes  = ($OSDevices | Where-Object ComplianceState -eq "compliant").Count
+            $Total      = $OSDevices.Count
+            $Pct        = if ($Total -gt 0) { [math]::Round($Conformes/$Total*100,1) } else { 0 }
+
+            [PSCustomObject]@{
+                OS              = $_.Name
+                TotalAppareils  = $Total
+                Conformes       = $Conformes
+                NonConformes    = $Total - $Conformes
+                TauxConformite  = "$Pct%"
+            }
+        } | Sort-Object TotalAppareils -Descending
+
+    $Summary | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8
+    $Summary | Format-Table -AutoSize
+    Write-Host "Rapport genere : $Output"
+}`}
+
+]; // fin DB
+
+// ══════════════════════════════════════════
 // STATE
-// ══════════════════════════════════════════════════
-let DB       = [];
-let ghToken  = '';      // jamais stocké côté client persistent
-let fileSha  = '';      // SHA du fichier courant (requis par l'API GitHub pour écrire)
-let curCat   = 'all';
-let curTag   = '';
+// ══════════════════════════════════════════
+var curCat = 'all';
+var curTag = '';
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // BOOT
-// ══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', async function () {
-  await loadScripts();
-  setupSidebar();
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  buildSidebar();
   render();
   document.getElementById('q').addEventListener('input', render);
-  document.querySelectorAll('.cat-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() { setCat(btn); });
+  document.querySelectorAll('.cat-btn').forEach(function(b) {
+    b.addEventListener('click', function() { setCat(b); });
   });
 });
 
-// ══════════════════════════════════════════════════
-// CHARGEMENT SCRIPTS (lecture publique, pas de token)
-// ══════════════════════════════════════════════════
-async function loadScripts() {
-  showGridMsg('⏳', 'Chargement des scripts...');
-  try {
-    // Lecture via API pour récupérer le SHA en même temps
-    const r = await fetch(API_URL, {
-      headers: { 'Accept': 'application/vnd.github+json' }
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const meta = await r.json();
-    fileSha = meta.sha;
-    DB = JSON.parse(atob(meta.content.replace(/\n/g, '')));
-  } catch(e) {
-    // Fallback lecture brute (repo public)
-    try {
-      const r2 = await fetch(RAW_URL + '?t=' + Date.now());
-      if (!r2.ok) throw new Error('HTTP ' + r2.status);
-      DB = await r2.json();
-    } catch(e2) {
-      showGridMsg('⚠️', 'Impossible de charger scripts.json<br><small>' + e2.message + '</small>');
-      DB = [];
-    }
-  }
-}
-
-// ══════════════════════════════════════════════════
-// SAUVEGARDE GITHUB (nécessite token)
-// ══════════════════════════════════════════════════
-async function saveToGitHub(msg) {
-  if (!ghToken) { openTokenModal(); return false; }
-
-  setGhStatus('saving', 'Sauvegarde...');
-
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(DB, null, 2))));
-
-  const body = {
-    message: msg || 'Update scripts.json via PS Admin Library',
-    content: content,
-    sha: fileSha,
-    branch: GH_BRANCH
-  };
-
-  try {
-    const r = await fetch(API_URL, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + ghToken,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!r.ok) {
-      const err = await r.json();
-      throw new Error(err.message || 'HTTP ' + r.status);
-    }
-
-    const data = await r.json();
-    fileSha = data.content.sha;  // mise à jour du SHA pour le prochain commit
-    setGhStatus('connected', 'enzodec/ps-admin-library');
-    return true;
-  } catch(e) {
-    setGhStatus('connected', 'enzodec/ps-admin-library');
-    toast('Erreur GitHub : ' + e.message, 'err');
-    return false;
-  }
-}
-
-// ══════════════════════════════════════════════════
-// TOKEN MODAL
-// ══════════════════════════════════════════════════
-function openTokenModal() {
-  document.getElementById('tokenInput').value = '';
-  document.getElementById('tokenErr').style.display = 'none';
-  document.getElementById('overlayToken').classList.add('open');
-}
-
-function toggleTokenVis() {
-  const inp = document.getElementById('tokenInput');
-  const btn = inp.nextElementSibling;
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'masquer'; }
-  else { inp.type = 'password'; btn.textContent = 'afficher'; }
-}
-
-async function connectGitHub() {
-  const token = document.getElementById('tokenInput').value.trim();
-  if (!token) return;
-
-  setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', true, '🔗', 'Vérification...');
-  document.getElementById('tokenErr').style.display = 'none';
-
-  // Vérification du token via l'API
-  try {
-    const r = await fetch(API_URL, {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/vnd.github+json'
-      }
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const meta = await r.json();
-    fileSha  = meta.sha;
-    ghToken  = token;
-    DB = JSON.parse(atob(meta.content.replace(/\n/g, '')));
-
-    setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', false, '🔗', 'Se connecter');
-    closeModal('overlayToken');
-    setGhStatus('connected', 'enzodec/ps-admin-library');
-    setupSidebar();
-    render();
-    toast('Connecté à GitHub ✔', 'ok');
-  } catch(e) {
-    setBtnLoading('btnConnect', 'connectIcon', 'connectLabel', false, '🔗', 'Se connecter');
-    document.getElementById('tokenErr').style.display = 'block';
-  }
-}
-
-function setGhStatus(state, label) {
-  const dot   = document.getElementById('ghDot');
-  const lbl   = document.getElementById('ghLabel');
-  dot.className = 'gh-dot ' + (state === 'connected' ? 'connected' : state === 'saving' ? 'saving' : '');
-  lbl.textContent = label;
-}
-
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // SIDEBAR
-// ══════════════════════════════════════════════════
-function setupSidebar() {
-  document.getElementById('c-all').textContent = DB.length;
-  ['ad','exo','aad','graph'].forEach(function(c) {
-    document.getElementById('c-' + c).textContent = DB.filter(function(s){ return s.cat === c; }).length;
+// ══════════════════════════════════════════
+function buildSidebar() {
+  document.getElementById('c-all').textContent    = DB.length;
+  ['ad','exo','aad','graph','intune'].forEach(function(c) {
+    document.getElementById('c-'+c).textContent = DB.filter(function(s){return s.cat===c;}).length;
   });
-
-  var allTags = [...new Set(DB.flatMap(function(s){ return s.tags; }))].sort();
-  var cloud   = document.getElementById('tagCloud');
+  var tags  = [...new Set(DB.flatMap(function(s){return s.tags;}))].sort();
+  var cloud = document.getElementById('tagCloud');
   cloud.innerHTML = '';
-  allTags.forEach(function(t) {
+  tags.forEach(function(t) {
     var b = document.createElement('button');
-    b.className = 'tag-btn';
-    b.textContent = t;
-    b.addEventListener('click', function() {
-      if (curTag === t) { curTag = ''; b.classList.remove('on'); }
-      else { curTag = t; document.querySelectorAll('.tag-btn').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); }
+    b.className = 'tag-btn'; b.textContent = t;
+    b.onclick = function() {
+      if (curTag===t){curTag='';b.classList.remove('on');}
+      else{curTag=t;document.querySelectorAll('.tag-btn').forEach(function(x){x.classList.remove('on');});b.classList.add('on');}
       render();
-    });
+    };
     cloud.appendChild(b);
   });
 }
 
 function setCat(btn) {
   curCat = btn.dataset.cat;
-  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  var titles = { all:'Tous les scripts', ad:'Active Directory', exo:'Exchange Online', aad:'Entra ID / Azure AD', graph:'Microsoft Graph' };
-  document.getElementById('mainTitle').textContent = titles[curCat];
+  var T={all:'Tous les scripts',ad:'Active Directory',exo:'Exchange Online',aad:'Entra ID / Azure AD',graph:'Microsoft Graph',intune:'Intune / MEM'};
+  document.getElementById('mainTitle').textContent = T[curCat];
   render();
 }
 
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 // RENDER
-// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════
 function render() {
-  var q    = document.getElementById('q').value.toLowerCase().trim();
+  var q = document.getElementById('q').value.toLowerCase().trim();
   var list = DB.filter(function(s) {
-    if (curCat !== 'all' && s.cat !== curCat) return false;
+    if (curCat!=='all' && s.cat!==curCat) return false;
     if (curTag && !s.tags.includes(curTag)) return false;
-    if (q && !s.title.toLowerCase().includes(q) && !s.desc.toLowerCase().includes(q) && !s.tags.some(function(t){ return t.includes(q); })) return false;
+    if (q && !s.title.toLowerCase().includes(q) && !s.desc.toLowerCase().includes(q) && !s.tags.some(function(t){return t.includes(q);})) return false;
     return true;
   });
 
   document.getElementById('visCnt').textContent = list.length;
-  document.getElementById('resInfo').textContent = list.length === DB.length ? '' : list.length + ' résultat(s)';
+  document.getElementById('resInfo').textContent = list.length===DB.length?'':list.length+' résultat(s)';
 
-  var grid = document.getElementById('grid');
+  if (!list.length) { setGrid('<div class="state"><div class="ico">⚡</div><p>Aucun script trouvé.</p></div>'); return; }
 
-  if (!DB.length) return;  // erreur de chargement déjà affichée
-
-  if (!list.length) {
-    showGridMsg('⚡', 'Aucun script trouvé.');
-    return;
-  }
-
-  var container = document.createElement('div');
-  container.className = 'grid';
+  var wrap = document.createElement('div');
+  wrap.className = 'grid';
 
   list.forEach(function(s, i) {
-    var card = document.createElement('div');
-    card.className = 'card';
-    card.style.animationDelay = (i * 0.03) + 's';
+    var card = el('div','card');
+    card.style.animationDelay = (i*0.025)+'s';
 
-    var stripe = document.createElement('div');
-    stripe.className = 'stripe stripe-' + s.cat;
+    var stripe = el('div','stripe stripe-'+s.cat);
 
-    var head = document.createElement('div');
-    head.className = 'card-head';
+    var head  = el('div','card-head');
+    var meta  = el('div','card-meta');
+    var tEl   = el('div','card-title'); tEl.textContent = s.title;
+    var dEl   = el('div','card-desc');  dEl.textContent = s.desc;
+    var tags  = el('div','card-tags');
+    var cb    = el('span','badge badge-'+s.cat); cb.textContent = s.cat.toUpperCase();
+    tags.appendChild(cb);
+    s.tags.forEach(function(t){ var tb=el('span','badge badge-tag'); tb.textContent=t; tags.appendChild(tb); });
+    meta.appendChild(tEl); meta.appendChild(dEl); meta.appendChild(tags);
 
-    var meta = document.createElement('div');
-    meta.className = 'card-meta';
-
-    var titleEl = document.createElement('div');
-    titleEl.className = 'card-title';
-    titleEl.textContent = s.title;
-
-    var descEl = document.createElement('div');
-    descEl.className = 'card-desc';
-    descEl.textContent = s.desc;
-
-    var tagsEl = document.createElement('div');
-    tagsEl.className = 'card-tags';
-    var catB = document.createElement('span');
-    catB.className = 'badge badge-' + s.cat;
-    catB.textContent = s.cat.toUpperCase();
-    tagsEl.appendChild(catB);
-    s.tags.forEach(function(t) {
-      var tb = document.createElement('span');
-      tb.className = 'badge badge-tag';
-      tb.textContent = t;
-      tagsEl.appendChild(tb);
-    });
-
-    meta.appendChild(titleEl);
-    meta.appendChild(descEl);
-    meta.appendChild(tagsEl);
-
-    var actions = document.createElement('div');
-    actions.className = 'card-actions';
-
-    var btnCopy = document.createElement('button');
-    btnCopy.className = 'btn';
-    btnCopy.textContent = '⎘ Copier';
-    btnCopy.addEventListener('click', function() {
-      navigator.clipboard.writeText(s.code).then(function() {
-        btnCopy.textContent = '✔ Copié';
-        btnCopy.classList.add('copied');
-        setTimeout(function() { btnCopy.textContent = '⎘ Copier'; btnCopy.classList.remove('copied'); }, 2000);
+    var btns  = el('div','card-btns');
+    var bCopy = el('button','cbtn'); bCopy.textContent='⎘ Copier';
+    bCopy.onclick = function() {
+      navigator.clipboard.writeText(s.code).then(function(){
+        bCopy.textContent='✔ Copié'; bCopy.classList.add('ok');
+        setTimeout(function(){bCopy.textContent='⎘ Copier';bCopy.classList.remove('ok');},2000);
       });
-    });
+    };
+    var bEdit = el('button','cbtn edit'); bEdit.textContent='✏'; bEdit.title='Modifier';
+    bEdit.onclick = function() { openForm(s); };
+    var bExp  = el('button','cbtn exp'); bExp.textContent='▾';
+    btns.appendChild(bCopy); btns.appendChild(bEdit); btns.appendChild(bExp);
+    head.appendChild(meta); head.appendChild(btns);
 
-    var btnEdit = document.createElement('button');
-    btnEdit.className = 'btn btn-edit';
-    btnEdit.textContent = '✏';
-    btnEdit.title = 'Modifier';
-    btnEdit.addEventListener('click', function() { openModal(s); });
+    var cw = el('div','code-wrap');
+    var ci = el('div','code-inner');
+    var pr = el('pre',''); pr.textContent = s.code;
+    ci.appendChild(pr); cw.appendChild(ci);
+    bExp.onclick = function() { cw.classList.toggle('open'); bExp.textContent=cw.classList.contains('open')?'▴':'▾'; };
 
-    var btnExp = document.createElement('button');
-    btnExp.className = 'btn btn-exp';
-    btnExp.textContent = '▾';
-
-    actions.appendChild(btnCopy);
-    actions.appendChild(btnEdit);
-    actions.appendChild(btnExp);
-    head.appendChild(meta);
-    head.appendChild(actions);
-
-    var wrap  = document.createElement('div');
-    wrap.className = 'code-wrap';
-    var inner = document.createElement('div');
-    inner.className = 'code-inner';
-    var pre   = document.createElement('pre');
-    pre.textContent = s.code;
-    inner.appendChild(pre);
-    wrap.appendChild(inner);
-
-    btnExp.addEventListener('click', function() {
-      wrap.classList.toggle('open');
-      btnExp.textContent = wrap.classList.contains('open') ? '▴' : '▾';
-    });
-
-    card.appendChild(stripe);
-    card.appendChild(head);
-    card.appendChild(wrap);
-    container.appendChild(card);
+    card.appendChild(stripe); card.appendChild(head); card.appendChild(cw);
+    wrap.appendChild(card);
   });
 
+  var grid = document.getElementById('grid');
   grid.innerHTML = '';
-  grid.appendChild(container);
+  grid.appendChild(wrap);
 }
 
-// ══════════════════════════════════════════════════
-// MODAL SCRIPT
-// ══════════════════════════════════════════════════
-function openModal(script) {
-  document.getElementById('editId').value  = script ? script.id : '';
-  document.getElementById('modalTitle').textContent = script ? 'Modifier le script' : 'Nouveau script';
-  document.getElementById('fTitle').value  = script ? script.title : '';
-  document.getElementById('fDesc').value   = script ? script.desc  : '';
-  document.getElementById('fCat').value    = script ? script.cat   : 'ad';
-  document.getElementById('fTags').value   = script ? script.tags.join(', ') : '';
-  document.getElementById('fCode').value   = script ? script.code  : '';
-  document.getElementById('btnDelete').style.display = script ? 'block' : 'none';
-  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', false, '💾', 'Enregistrer');
-  document.getElementById('overlayScript').classList.add('open');
+// ══════════════════════════════════════════
+// FORM
+// ══════════════════════════════════════════
+function openForm(s) {
+  document.getElementById('eId').value    = s ? s.id : '';
+  document.getElementById('formTitle').textContent = s ? 'Modifier le script' : 'Nouveau script';
+  document.getElementById('fTitle').value = s ? s.title : '';
+  document.getElementById('fDesc').value  = s ? s.desc  : '';
+  document.getElementById('fCat').value   = s ? s.cat   : 'ad';
+  document.getElementById('fTags').value  = s ? s.tags.join(', ') : '';
+  document.getElementById('fCode').value  = s ? s.code  : '';
+  document.getElementById('btnDel').style.display = s ? 'block' : 'none';
+  document.getElementById('ovForm').classList.add('open');
 }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
+function saveScript() {
+  var title = document.getElementById('fTitle').value.trim();
+  var desc  = document.getElementById('fDesc').value.trim();
+  var cat   = document.getElementById('fCat').value;
+  var tags  = document.getElementById('fTags').value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+  var code  = document.getElementById('fCode').value.trim();
+  var eid   = document.getElementById('eId').value;
 
-function closeModalIfBg(e, id) {
-  if (e.target === document.getElementById(id)) closeModal(id);
-}
+  if (!title||!desc||!code) { toast('Titre, description et code sont requis.','err'); return; }
 
-async function saveScript() {
-  var title  = document.getElementById('fTitle').value.trim();
-  var desc   = document.getElementById('fDesc').value.trim();
-  var cat    = document.getElementById('fCat').value;
-  var tags   = document.getElementById('fTags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
-  var code   = document.getElementById('fCode').value.trim();
-  var editId = document.getElementById('editId').value;
-
-  if (!title || !desc || !code) { toast('Titre, description et code sont requis.', 'err'); return; }
-  if (!ghToken) { toast('Connecte-toi d\'abord à GitHub.', 'warn'); openTokenModal(); return; }
-
-  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', true, '⏳', 'Sauvegarde...');
-
-  var commitMsg;
-  if (editId) {
-    var idx = DB.findIndex(function(s){ return s.id === editId; });
-    if (idx !== -1) { DB[idx] = { id: editId, cat, title, desc, tags, code }; }
-    commitMsg = 'edit: ' + title;
+  if (eid) {
+    var i = DB.findIndex(function(s){return s.id===eid;});
+    if (i!==-1) DB[i] = {id:eid,cat,title,desc,tags,code};
   } else {
-    DB.push({ id: cat + Date.now(), cat, title, desc, tags, code });
-    commitMsg = 'add: ' + title;
+    DB.push({id:cat+Date.now(),cat,title,desc,tags,code});
   }
 
-  var ok = await saveToGitHub(commitMsg);
-  setBtnLoading('btnSave', 'saveIcon', 'saveLabel', false, '💾', 'Enregistrer');
-
-  if (ok) {
-    closeModal('overlayScript');
-    setupSidebar();
-    render();
-    toast(editId ? '✔ Script modifié et sauvegardé sur GitHub !' : '✔ Script ajouté et sauvegardé sur GitHub !', 'ok');
-  }
+  closeOv('ovForm');
+  buildSidebar();
+  render();
+  showExport();
+  toast('✔ '+(eid?'Script modifié':'Script ajouté')+' — synchronise avec GitHub.','ok');
 }
 
-async function deleteScript() {
-  var editId = document.getElementById('editId').value;
-  if (!editId) return;
-  var s = DB.find(function(x){ return x.id === editId; });
-  if (!confirm('Supprimer "' + (s ? s.title : editId) + '" ?')) return;
-  if (!ghToken) { toast('Connecte-toi d\'abord à GitHub.', 'warn'); openTokenModal(); return; }
-
-  DB = DB.filter(function(x){ return x.id !== editId; });
-  var ok = await saveToGitHub('delete: ' + (s ? s.title : editId));
-  if (ok) {
-    closeModal('overlayScript');
-    setupSidebar();
-    render();
-    toast('✔ Script supprimé sur GitHub.', 'ok');
-  } else {
-    // Rollback local si erreur
-    if (s) DB.push(s);
-  }
+function deleteScript() {
+  var eid = document.getElementById('eId').value;
+  var s   = DB.find(function(x){return x.id===eid;});
+  if (!confirm('Supprimer "'+( s?s.title:eid)+'" ?')) return;
+  DB = DB.filter(function(x){return x.id!==eid;});
+  closeOv('ovForm');
+  buildSidebar();
+  render();
+  showExport();
+  toast('✔ Script supprimé — synchronise avec GitHub.','ok');
 }
 
-// ══════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════
-function showGridMsg(ico, msg) {
-  document.getElementById('grid').innerHTML =
-    '<div class="state-msg"><div class="ico">' + ico + '</div><p>' + msg + '</p></div>';
+// ══════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════
+function showExport() {
+  document.getElementById('jsonOut').value = JSON.stringify(DB, null, 2);
+  document.getElementById('ovExport').classList.add('open');
 }
 
-function setBtnLoading(btnId, iconId, labelId, loading, icon, label) {
-  document.getElementById(btnId).disabled     = loading;
-  document.getElementById(iconId).textContent = icon;
-  document.getElementById(labelId).textContent= label;
+function copyJson() {
+  navigator.clipboard.writeText(document.getElementById('jsonOut').value).then(function(){
+    var b = document.querySelector('.big-copy');
+    b.textContent = '✔ Copié !';
+    setTimeout(function(){b.textContent='⎘ Copier le JSON complet';},2500);
+  });
 }
 
-var toastTimer;
-function toast(msg, type) {
-  clearTimeout(toastTimer);
-  var el = document.getElementById('toast');
-  el.textContent  = msg;
-  el.className    = 'toast ' + (type || '');
-  el.style.display= 'block';
-  toastTimer = setTimeout(function() { el.style.display = 'none'; }, 4000);
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function el(tag,cls){ var e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function setGrid(h){ document.getElementById('grid').innerHTML=h; }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+function bgClose(e,id){ if(e.target===document.getElementById(id)) closeOv(id); }
+var _tt;
+function toast(msg,type){
+  clearTimeout(_tt);
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||'');
+  t.style.display='block';
+  _tt=setTimeout(function(){t.style.display='none';},4000);
 }
 </script>
 </body>
