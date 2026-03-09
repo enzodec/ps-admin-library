@@ -601,14 +601,226 @@ var DB = [
     "code": "function Get-IntuneComplianceSummaryByOS {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ComplianceSummary_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Devices = Get-MgDeviceManagementManagedDevice -All\n\n    $Summary = $Devices |\n        Group-Object OperatingSystem |\n        ForEach-Object {\n            $G   = $_.Group\n            $Tot = $G.Count\n            $OK  = ($G | Where-Object ComplianceState -eq \"compliant\").Count\n            $Pct = if ($Tot -gt 0) { [math]::Round($OK/$Tot*100,1) } else { 0 }\n\n            [PSCustomObject]@{\n                OS             = $_.Name\n                TotalAppareils = $Tot\n                Conformes      = $OK\n                NonConformes   = $Tot - $OK\n                TauxConformite = \"$Pct%\"\n            }\n        } | Sort-Object TotalAppareils -Descending\n\n    $Summary | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $Summary | Format-Table -AutoSize\n    Write-Host \"Rapport genere : $Output\"\n}"
   },
   {
-    "id": "ad1773017716416",
-    "cat": "ad",
-    "title": "test GIT",
-    "desc": "test GIT",
+    "id": "intune13",
+    "cat": "intune",
+    "title": "ABM — Lister appareils Apple enrollés",
+    "desc": "Liste tous les appareils Apple (iPhone, iPad, Mac) enrollés via Apple Business Manager dans Intune.",
     "tags": [
-      "connexion"
+      "ABM",
+      "Apple",
+      "inventaire",
+      "iOS",
+      "macOS"
     ],
-    "code": "test GIT"
+    "code": "function Get-ABMEnrolledDevices {\n    param(\n        [string]$Platform = \"All\",  # All | iOS | macOS\n        [string]$Output   = \"C:\\\\Logs\\\\ABM_Devices_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Filter = \"managementAgent eq 'mdm'\"\n    $Devices = Get-MgDeviceManagementManagedDevice -All |\n        Where-Object {\n            $_.OperatingSystem -in @('iOS','iPadOS','macOS') -and\n            ($Platform -eq 'All' -or $_.OperatingSystem -eq $Platform)\n        }\n\n    $Rapport = $Devices | ForEach-Object {\n        [PSCustomObject]@{\n            Nom               = $_.DeviceName\n            Utilisateur       = $_.UserPrincipalName\n            OS                = $_.OperatingSystem\n            Version           = $_.OsVersion\n            Modele            = $_.Model\n            NumeroSerie       = $_.SerialNumber\n            UDID              = $_.Udid\n            Conformite        = $_.ComplianceState\n            EnrollmentType    = $_.DeviceEnrollmentType\n            DernierCheckIn    = $_.LastSyncDateTime\n            Supervise         = $_.IsSupervised\n            EnrollmentProfile = $_.EnrollmentProfileName\n        }\n    } | Sort-Object OS, Modele\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) appareils Apple ABM exportes.\" -ForegroundColor Green\n    $Rapport | Group-Object OS | ForEach-Object {\n        Write-Host \"  $($_.Name): $($_.Count)\"\n    }\n}"
+  },
+  {
+    "id": "intune14",
+    "cat": "intune",
+    "title": "ABM — Rapport profils d'enrollment Apple",
+    "desc": "Liste tous les profils d'enrollment DEP/ABM configurés dans Intune avec leurs appareils assignés.",
+    "tags": [
+      "ABM",
+      "Apple",
+      "DEP",
+      "enrollment",
+      "profils"
+    ],
+    "code": "function Get-ABMEnrollmentProfiles {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ABM_Profiles_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    # Récupère les profils DEP (Apple Enrollment Profiles)\n    $Profiles = Invoke-MgGraphRequest -Method GET `\n        -Uri \"deviceManagement/depOnboardingSettings\" |\n        Select-Object -ExpandProperty value\n\n    Write-Host \"$($Profiles.Count) token(s) ABM/DEP trouves.\" -ForegroundColor Cyan\n\n    $Rapport = foreach ($Token in $Profiles) {\n        $TokenId  = $Token.id\n        $EnvProfils = Invoke-MgGraphRequest -Method GET `\n            -Uri \"deviceManagement/depOnboardingSettings/$TokenId/enrollmentProfiles\" |\n            Select-Object -ExpandProperty value\n\n        foreach ($P in $EnvProfils) {\n            [PSCustomObject]@{\n                TokenNom         = $Token.tokenName\n                TokenExpiration  = $Token.tokenExpirationDateTime\n                ProfilNom        = $P.displayName\n                Description      = $P.description\n                Platform         = $P.platform\n                Supervise        = $P.isSupervised\n                AwaitDeviceConf  = $P.isDefaultProfile\n                ProfilId         = $P.id\n            }\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) profils ABM exportes vers $Output\"\n}"
+  },
+  {
+    "id": "intune15",
+    "cat": "intune",
+    "title": "ABM — Assigner profil enrollment à appareils",
+    "desc": "Assigne un profil d'enrollment ABM/DEP à une liste d'appareils Apple par numéro de série.",
+    "tags": [
+      "ABM",
+      "Apple",
+      "DEP",
+      "enrollment",
+      "assignation"
+    ],
+    "code": "function Set-ABMDeviceEnrollmentProfile {\n    param(\n        [Parameter(Mandatory)][string]$TokenId,\n        [Parameter(Mandatory)][string]$ProfilId,\n        [Parameter(Mandatory)][string[]]$SerialNumbers\n    )\n\n    $Body = @{\n        deviceIds = @()\n    }\n\n    # Trouve les device IDs depuis les numéros de série\n    foreach ($Serial in $SerialNumbers) {\n        $Device = Invoke-MgGraphRequest -Method GET `\n            -Uri \"deviceManagement/depOnboardingSettings/$TokenId/importedAppleDeviceIdentities?`$filter=serialNumber eq '$Serial'\" |\n            Select-Object -ExpandProperty value | Select-Object -First 1\n\n        if ($Device) {\n            $Body.deviceIds += $Device.id\n            Write-Host \"  Trouve: $Serial -> $($Device.id)\"\n        } else {\n            Write-Warning \"  Introuvable: $Serial\"\n        }\n    }\n\n    if ($Body.deviceIds.Count -eq 0) {\n        Write-Error \"Aucun appareil trouve.\"; return\n    }\n\n    $Body.enrollmentProfileId = $ProfilId\n\n    Invoke-MgGraphRequest -Method POST `\n        -Uri \"deviceManagement/depOnboardingSettings/$TokenId/enrollmentProfiles/$ProfilId/setDefaultProfile\" `\n        -Body ($Body | ConvertTo-Json) `\n        -ContentType \"application/json\"\n\n    Write-Host \"$($Body.deviceIds.Count) appareil(s) assigne(s) au profil $ProfilId.\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "intune16",
+    "cat": "intune",
+    "title": "ABM — Sync token Apple Business Manager",
+    "desc": "Déclenche la synchronisation manuelle entre Intune et le token Apple Business Manager.",
+    "tags": [
+      "ABM",
+      "Apple",
+      "sync",
+      "DEP"
+    ],
+    "code": "function Sync-ABMToken {\n    param(\n        [string]$TokenId = \"\"  # Laisser vide pour synchroniser tous les tokens\n    )\n\n    if ($TokenId) {\n        $Tokens = @([PSCustomObject]@{ id=$TokenId })\n    } else {\n        $Tokens = Invoke-MgGraphRequest -Method GET `\n            -Uri \"deviceManagement/depOnboardingSettings\" |\n            Select-Object -ExpandProperty value\n    }\n\n    foreach ($Token in $Tokens) {\n        try {\n            Invoke-MgGraphRequest -Method POST `\n                -Uri \"deviceManagement/depOnboardingSettings/$($Token.id)/syncWithAppleDeviceEnrollmentProgram\"\n\n            Write-Host \"Sync lancee : $($Token.tokenName ?? $Token.id)\" -ForegroundColor Green\n        } catch {\n            Write-Error \"Erreur sync token $($Token.id) : $_\"\n        }\n    }\n\n    Write-Host \"Attendre 5-10 minutes pour que la sync se termine.\"\n}"
+  },
+  {
+    "id": "intune17",
+    "cat": "intune",
+    "title": "ABM — Rapport appareils en attente enrollment",
+    "desc": "Liste les appareils Apple ABM importés mais pas encore enrollés dans Intune.",
+    "tags": [
+      "ABM",
+      "Apple",
+      "enrollment",
+      "audit"
+    ],
+    "code": "function Get-ABMPendingDevices {\n    param(\n        [string]$TokenId = \"\",\n        [string]$Output  = \"C:\\\\Logs\\\\ABM_Pending_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    if (-not $TokenId) {\n        $Tokens = Invoke-MgGraphRequest -Method GET `\n            -Uri \"deviceManagement/depOnboardingSettings\" |\n            Select-Object -ExpandProperty value\n        $TokenId = $Tokens[0].id\n        Write-Host \"Utilisation du token : $($Tokens[0].tokenName)\"\n    }\n\n    $AllDevices = Invoke-MgGraphRequest -Method GET `\n        -Uri \"deviceManagement/depOnboardingSettings/$TokenId/importedAppleDeviceIdentities\" `\n        -OutputType PSObject\n\n    $Pending = $AllDevices.value | Where-Object {\n        $_.discoverySource -eq 'deviceEnrollmentProgram' -and\n        $_.enrollmentState -ne 'enrolled'\n    }\n\n    $Rapport = $Pending | ForEach-Object {\n        [PSCustomObject]@{\n            NumeroSerie      = $_.serialNumber\n            Description      = $_.description\n            EnrollmentState  = $_.enrollmentState\n            ProfilAssigne    = $_.enrollmentProfileName\n            AjouteLe         = $_.createdDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) appareil(s) en attente d'enrollment.\"\n    $Rapport | Format-Table -AutoSize\n}"
+  },
+  {
+    "id": "intune18",
+    "cat": "intune",
+    "title": "iOS/macOS — Envoyer message sur appareil supervisé",
+    "desc": "Envoie un message personnalisé sur un appareil iOS ou macOS supervisé via Intune.",
+    "tags": [
+      "ABM",
+      "Apple",
+      "iOS",
+      "macOS",
+      "message",
+      "supervisé"
+    ],
+    "code": "function Send-IntuneDeviceMessage {\n    param(\n        [Parameter(Mandatory)][string]$DeviceName,\n        [Parameter(Mandatory)][string]$Message,\n        [string]$SousTitre = \"\"\n    )\n\n    $Device = Get-MgDeviceManagementManagedDevice `\n        -Filter \"deviceName eq '$DeviceName'\" | Select-Object -First 1\n\n    if (-not $Device) { Write-Error \"Appareil '$DeviceName' introuvable.\"; return }\n\n    if (-not $Device.IsSupervised) {\n        Write-Warning \"L'appareil n'est pas supervise. Le message peut ne pas s'afficher.\"\n    }\n\n    $Body = @{\n        notificationTitle   = \"Message IT\"\n        notificationMessage = $Message\n    } | ConvertTo-Json\n\n    try {\n        Invoke-MgGraphRequest -Method POST `\n            -Uri \"deviceManagement/managedDevices/$($Device.Id)/sendCustomNotificationToCompanyPortal\" `\n            -Body $Body -ContentType \"application/json\"\n\n        Write-Host \"Message envoye sur $DeviceName.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Erreur envoi message : $_\"\n    }\n}"
+  },
+  {
+    "id": "export1",
+    "cat": "ad",
+    "title": "Export complet utilisateurs AD",
+    "desc": "Export exhaustif de tous les utilisateurs AD avec leurs attributs essentiels vers CSV/Excel.",
+    "tags": [
+      "export",
+      "users",
+      "rapport",
+      "CSV"
+    ],
+    "code": "function Export-ADUsersComplet {\n    param(\n        [string]$OU     = \"\",   # Laisser vide pour tout le domaine\n        [string]$Output = \"C:\\\\Logs\\\\AD_Users_$(Get-Date -f yyyyMMdd).csv\",\n        [switch]$Excel\n    )\n\n    $Props = @(\n        'SamAccountName','DisplayName','GivenName','Surname',\n        'UserPrincipalName','EmailAddress','Title','Department',\n        'Company','Manager','OfficePhone','MobilePhone',\n        'StreetAddress','City','Country','PostalCode',\n        'Enabled','LockedOut','PasswordExpired','PasswordLastSet',\n        'LastLogonDate','Created','Modified',\n        'AccountExpirationDate','DistinguishedName'\n    )\n\n    $Filter = if ($OU) {\n        Get-ADUser -Filter * -SearchBase $OU -Properties $Props\n    } else {\n        Get-ADUser -Filter * -Properties $Props\n    }\n\n    $Rapport = $Filter | ForEach-Object {\n        $Manager = if ($_.Manager) {\n            (Get-ADUser $_.Manager -Properties DisplayName).DisplayName\n        } else { \"\" }\n\n        [PSCustomObject]@{\n            Login             = $_.SamAccountName\n            UPN               = $_.UserPrincipalName\n            Prenom            = $_.GivenName\n            Nom               = $_.Surname\n            NomAffichage      = $_.DisplayName\n            Email             = $_.EmailAddress\n            Titre             = $_.Title\n            Departement       = $_.Department\n            Societe           = $_.Company\n            Manager           = $Manager\n            Tel               = $_.OfficePhone\n            Mobile            = $_.MobilePhone\n            Actif             = $_.Enabled\n            Verrouille        = $_.LockedOut\n            MdpExpire         = $_.PasswordExpired\n            DernierMdp        = $_.PasswordLastSet\n            DerniereConnexion = $_.LastLogonDate\n            CreeLE            = $_.Created\n            Expiration        = $_.AccountExpirationDate\n            OU                = $_.DistinguishedName\n        }\n    } | Sort-Object Departement, Nom\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) utilisateurs exportes vers $Output\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "export2",
+    "cat": "exo",
+    "title": "Export complet boîtes aux lettres Exchange",
+    "desc": "Export détaillé de toutes les boîtes Exchange Online : taille, quota, type, aliases, permissions.",
+    "tags": [
+      "export",
+      "mailbox",
+      "rapport",
+      "CSV",
+      "Exchange"
+    ],
+    "code": "function Export-EXOMailboxesComplet {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\EXO_Mailboxes_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    Write-Host \"Chargement des boites... (peut prendre quelques minutes)\"\n    $Mailboxes = Get-Mailbox -ResultSize Unlimited\n\n    $Rapport = $Mailboxes | ForEach-Object {\n        $Stats   = Get-MailboxStatistics -Identity $_.ExchangeGuid -ErrorAction SilentlyContinue\n        $SizeMB  = if ($Stats) { [math]::Round($Stats.TotalItemSize.Value.ToBytes()/1MB,2) } else { 0 }\n        $Aliases = ($_.EmailAddresses | Where-Object { $_ -like 'smtp:*' } |\n                    ForEach-Object { $_ -replace '^smtp:','' }) -join '; '\n\n        [PSCustomObject]@{\n            DisplayName       = $_.DisplayName\n            UPN               = $_.UserPrincipalName\n            PrimaryEmail      = $_.PrimarySmtpAddress\n            Aliases           = $Aliases\n            TypeBoite         = $_.RecipientTypeDetails\n            TailleMB          = $SizeMB\n            NbItems           = $Stats?.ItemCount\n            QuotaEnvoi        = $_.ProhibitSendQuota\n            QuotaEnvoiRecept  = $_.ProhibitSendReceiveQuota\n            ForwardingEmail   = $_.ForwardingSmtpAddress\n            GardeCopie        = $_.DeliverToMailboxAndForward\n            DerniereConnexion = $Stats?.LastLogonTime\n            Cachee            = $_.HiddenFromAddressListsEnabled\n            Database          = $_.Database\n        }\n    } | Sort-Object TailleMB -Descending\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) boites exportees vers $Output\" -ForegroundColor Green\n    Write-Host \"Taille totale : $([math]::Round(($Rapport | Measure-Object TailleMB -Sum).Sum / 1024, 2)) GB\"\n}"
+  },
+  {
+    "id": "export3",
+    "cat": "aad",
+    "title": "Export complet utilisateurs Entra ID",
+    "desc": "Export de tous les utilisateurs Entra ID avec licences, dernière connexion, MFA et rôles.",
+    "tags": [
+      "export",
+      "users",
+      "Entra",
+      "rapport",
+      "CSV"
+    ],
+    "code": "function Export-EntraUsersComplet {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\Entra_Users_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $SkuMap = @{}\n    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }\n\n    Write-Host \"Chargement utilisateurs Entra ID...\"\n    $Users = Get-MgUser -All -Property `\n        DisplayName,UserPrincipalName,AccountEnabled,Department,JobTitle,\n        AssignedLicenses,SignInActivity,CreatedDateTime,\n        UsageLocation,UserType,OnPremisesSyncEnabled,\n        MobilePhone,BusinessPhones,Mail\n\n    $Rapport = $Users | ForEach-Object {\n        $Lics    = ($_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] ?? $_.SkuId }) -join '; '\n        $LastCnx = $_.SignInActivity?.LastSignInDateTime\n\n        [PSCustomObject]@{\n            DisplayName         = $_.DisplayName\n            UPN                 = $_.UserPrincipalName\n            Email               = $_.Mail\n            Actif               = $_.AccountEnabled\n            TypeUtilisateur     = $_.UserType\n            Departement         = $_.Department\n            Titre               = $_.JobTitle\n            Tel                 = $_.MobilePhone\n            Licences            = $Lics\n            NbLicences          = $_.AssignedLicenses.Count\n            DerniereConnexion   = $LastCnx\n            JoursInactif        = if ($LastCnx) { [math]::Round((Get-Date - $LastCnx).TotalDays) } else { 999 }\n            SyncOnPrem          = $_.OnPremisesSyncEnabled\n            PaysPairement       = $_.UsageLocation\n            CreeLe              = $_.CreatedDateTime\n        }\n    } | Sort-Object JoursInactif -Descending\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) utilisateurs exportes.\" -ForegroundColor Green\n    Write-Host \"Inactifs +90j : $(($Rapport | Where-Object JoursInactif -gt 90).Count)\"\n}"
+  },
+  {
+    "id": "export4",
+    "cat": "intune",
+    "title": "Export complet appareils Intune (tous OS)",
+    "desc": "Export exhaustif de tous les appareils Intune toutes plateformes confondues avec chiffrement, conformité et détails hardware.",
+    "tags": [
+      "export",
+      "appareils",
+      "Intune",
+      "rapport",
+      "CSV"
+    ],
+    "code": "function Export-IntuneDevicesComplet {\n    param(\n        [string]$Output   = \"C:\\\\Logs\\\\Intune_Devices_$(Get-Date -f yyyyMMdd).csv\",\n        [string]$Platform = \"All\"   # All | Windows | iOS | macOS | Android\n    )\n\n    Write-Host \"Chargement appareils Intune...\"\n    $Devices = Get-MgDeviceManagementManagedDevice -All\n\n    if ($Platform -ne 'All') {\n        $Devices = $Devices | Where-Object { $_.OperatingSystem -eq $Platform }\n    }\n\n    $Rapport = $Devices | ForEach-Object {\n        [PSCustomObject]@{\n            Nom                = $_.DeviceName\n            Utilisateur        = $_.UserPrincipalName\n            UPN                = $_.UserPrincipalName\n            OS                 = $_.OperatingSystem\n            Version            = $_.OsVersion\n            Conformite         = $_.ComplianceState\n            Chiffrement        = $_.IsEncrypted\n            Supervise          = $_.IsSupervised\n            TypeEnrollment     = $_.DeviceEnrollmentType\n            TypeGestion        = $_.ManagementAgent\n            Fabricant          = $_.Manufacturer\n            Modele             = $_.Model\n            NumeroSerie        = $_.SerialNumber\n            IMEI               = $_.Imei\n            WiFiMAC            = $_.WiFiMacAddress\n            DernierCheckIn     = $_.LastSyncDateTime\n            DateEnrollment     = $_.EnrolledDateTime\n            ProfilEnrollment   = $_.EnrollmentProfileName\n            CategorieAppareil  = $_.DeviceCategoryDisplayName\n            DeviceId           = $_.Id\n            AzureADDeviceId    = $_.AzureAdDeviceId\n        }\n    } | Sort-Object OS, Conformite, Nom\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) appareils exportes vers $Output\" -ForegroundColor Green\n    $Rapport | Group-Object OS | ForEach-Object {\n        $NC = ($_.Group | Where-Object Conformite -ne 'compliant').Count\n        Write-Host \"  $($_.Name): $($_.Count) appareils ($NC non conformes)\"\n    }\n}"
+  },
+  {
+    "id": "export5",
+    "cat": "graph",
+    "title": "Export rapport MFA utilisateurs",
+    "desc": "Exporte le statut MFA de tous les utilisateurs : méthodes enregistrées, MFA activé/désactivé, par département.",
+    "tags": [
+      "export",
+      "MFA",
+      "sécurité",
+      "rapport",
+      "CSV"
+    ],
+    "code": "function Export-MFAStatusReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\MFA_Status_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    Write-Host \"Chargement statuts MFA...\"\n    $Users = Get-MgUser -All -Property DisplayName,UserPrincipalName,AccountEnabled,Department\n\n    $Rapport = $Users | ForEach-Object {\n        $UserId  = $_.Id\n        $Methods = @()\n        try {\n            $AuthMethods = Get-MgUserAuthenticationMethod -UserId $UserId\n            $Methods = $AuthMethods | ForEach-Object {\n                $type = $_.'@odata.type' -replace '#microsoft.graph.','') -replace 'AuthenticationMethod',''\n                $type\n            }\n        } catch {}\n\n        $MFAEnabled = ($Methods | Where-Object { $_ -notin @('password','temporaryAccessPass') }).Count -gt 0\n\n        [PSCustomObject]@{\n            DisplayName    = $_.DisplayName\n            UPN            = $_.UserPrincipalName\n            Actif          = $_.AccountEnabled\n            Departement    = $_.Department\n            MFAActive      = $MFAEnabled\n            NbMethodes     = $Methods.Count\n            Methodes       = ($Methods -join '; ')\n            Authenticator  = ($Methods -contains 'microsoftAuthenticator')\n            SMS            = ($Methods -contains 'phone')\n            FIDO2          = ($Methods -contains 'fido2')\n            PasswordOnly   = (-not $MFAEnabled -and $_.AccountEnabled)\n        }\n    } | Sort-Object MFAActive, Departement\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $Sans = ($Rapport | Where-Object { $_.PasswordOnly -eq $true }).Count\n    Write-Host \"$($Rapport.Count) utilisateurs exportes.\" -ForegroundColor Green\n    Write-Warning \"$Sans utilisateur(s) actifs SANS MFA.\"\n}"
+  },
+  {
+    "id": "export6",
+    "cat": "exo",
+    "title": "Export permissions boîtes aux lettres",
+    "desc": "Exporte toutes les délégations FullAccess et SendAs de toutes les boîtes Exchange Online.",
+    "tags": [
+      "export",
+      "permissions",
+      "mailbox",
+      "délégation",
+      "audit"
+    ],
+    "code": "function Export-MailboxPermissions {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\Mailbox_Permissions_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    Write-Host \"Analyse des permissions... (operation longue)\"\n    $Mailboxes = Get-Mailbox -ResultSize Unlimited\n\n    $Rapport = foreach ($MB in $Mailboxes) {\n        # FullAccess\n        $FA = Get-MailboxPermission -Identity $MB.PrimarySmtpAddress |\n              Where-Object { $_.User -notlike '*SELF*' -and $_.User -notlike '*NT AUTHORITY*' -and $_.IsInherited -eq $false }\n\n        foreach ($P in $FA) {\n            [PSCustomObject]@{\n                Boite       = $MB.DisplayName\n                BoiteEmail  = $MB.PrimarySmtpAddress\n                Delegue     = $P.User\n                TypeAcces   = 'FullAccess'\n                Heritage    = $P.IsInherited\n            }\n        }\n\n        # SendAs\n        $SA = Get-RecipientPermission -Identity $MB.PrimarySmtpAddress |\n              Where-Object { $_.Trustee -notlike '*SELF*' -and $_.Trustee -notlike '*NT AUTHORITY*' }\n\n        foreach ($P in $SA) {\n            [PSCustomObject]@{\n                Boite       = $MB.DisplayName\n                BoiteEmail  = $MB.PrimarySmtpAddress\n                Delegue     = $P.Trustee\n                TypeAcces   = 'SendAs'\n                Heritage    = $false\n            }\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) permissions exportees vers $Output\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "export7",
+    "cat": "ad",
+    "title": "Export groupes AD et leurs membres",
+    "desc": "Export de tous les groupes AD avec type, scope, description et liste des membres directs.",
+    "tags": [
+      "export",
+      "groupes",
+      "AD",
+      "rapport",
+      "CSV"
+    ],
+    "code": "function Export-ADGroupsComplet {\n    param(\n        [string]$OU     = \"\",\n        [string]$Output = \"C:\\\\Logs\\\\AD_Groups_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Groups = if ($OU) {\n        Get-ADGroup -Filter * -SearchBase $OU -Properties Description,ManagedBy,Members,Created,GroupCategory,GroupScope\n    } else {\n        Get-ADGroup -Filter * -Properties Description,ManagedBy,Members,Created,GroupCategory,GroupScope\n    }\n\n    $Rapport = $Groups | ForEach-Object {\n        $Members = Get-ADGroupMember -Identity $_.SamAccountName -ErrorAction SilentlyContinue\n        $Manager = if ($_.ManagedBy) {\n            (Get-ADUser $_.ManagedBy -Properties DisplayName -ErrorAction SilentlyContinue).DisplayName\n        } else { \"\" }\n\n        [PSCustomObject]@{\n            Nom          = $_.Name\n            SamAccount   = $_.SamAccountName\n            Type         = $_.GroupCategory\n            Scope        = $_.GroupScope\n            Description  = $_.Description\n            Manager      = $Manager\n            NbMembres    = $Members.Count\n            Membres      = ($Members.SamAccountName -join '; ')\n            CreeLe       = $_.Created\n            DN           = $_.DistinguishedName\n        }\n    } | Sort-Object Type, Nom\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) groupes exportes vers $Output\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "export8",
+    "cat": "graph",
+    "title": "Export rapport Teams et membres",
+    "desc": "Liste toutes les équipes Microsoft Teams avec leur statut, membres, owners et canaux.",
+    "tags": [
+      "export",
+      "Teams",
+      "rapport",
+      "CSV",
+      "collaboration"
+    ],
+    "code": "function Export-TeamsReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\Teams_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    Write-Host \"Chargement des equipes Teams...\"\n    $Teams = Get-MgGroup -Filter \"resourceProvisioningOptions/Any(x:x eq 'Team')\" -All `\n        -Property DisplayName,Description,Visibility,CreatedDateTime,Id\n\n    $Rapport = $Teams | ForEach-Object {\n        $TeamId = $_.Id\n\n        # Membres et owners\n        $Members = Get-MgGroupMember -GroupId $TeamId -All -ErrorAction SilentlyContinue\n        $Owners  = Get-MgGroupOwner  -GroupId $TeamId -All -ErrorAction SilentlyContinue\n\n        # Canaux\n        $Channels = Get-MgTeamChannel -TeamId $TeamId -ErrorAction SilentlyContinue\n\n        [PSCustomObject]@{\n            Nom          = $_.DisplayName\n            Description  = $_.Description\n            Visibilite   = $_.Visibility\n            NbMembres    = $Members.Count\n            NbOwners     = $Owners.Count\n            Owners       = ($Owners | ForEach-Object { $_.AdditionalProperties.displayName }) -join '; '\n            NbCanaux     = $Channels.Count\n            CreeLe       = $_.CreatedDateTime\n            TeamId       = $TeamId\n        }\n    } | Sort-Object Nom\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) equipes Teams exportees vers $Output\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "export9",
+    "cat": "aad",
+    "title": "Export rôles Entra ID et membres",
+    "desc": "Export de tous les rôles Entra ID (Global Admin, etc.) avec leurs membres actuels.",
+    "tags": [
+      "export",
+      "rôles",
+      "Entra",
+      "sécurité",
+      "audit"
+    ],
+    "code": "function Export-EntraRolesReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\Entra_Roles_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Roles  = Get-MgDirectoryRole -All\n    $Rapport = foreach ($Role in $Roles) {\n        $Members = Get-MgDirectoryRoleMember -DirectoryRoleId $Role.Id -All\n\n        if ($Members.Count -eq 0) {\n            [PSCustomObject]@{\n                Role        = $Role.DisplayName\n                Description = $Role.Description\n                Membre      = \"(aucun)\"\n                MemberUPN   = \"\"\n                MemberType  = \"\"\n                RoleId      = $Role.Id\n            }\n        } else {\n            foreach ($M in $Members) {\n                $User = Get-MgUser -UserId $M.Id -ErrorAction SilentlyContinue\n                [PSCustomObject]@{\n                    Role        = $Role.DisplayName\n                    Description = $Role.Description\n                    Membre      = $M.AdditionalProperties.displayName\n                    MemberUPN   = $User?.UserPrincipalName\n                    MemberType  = $M.AdditionalProperties.'@odata.type' -replace '#microsoft.graph.',''\n                    RoleId      = $Role.Id\n                }\n            }\n        }\n    } | Sort-Object Role, Membre\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $Admins = ($Rapport | Where-Object { $_.Role -like '*Global Administrator*' -and $_.MemberUPN }).Count\n    Write-Host \"$($Rapport.Count) entrees exportees.\" -ForegroundColor Green\n    Write-Warning \"$Admins Global Administrator(s) actifs.\"\n}"
+  },
+  {
+    "id": "export10",
+    "cat": "intune",
+    "title": "Export global rapport sécurité M365",
+    "desc": "Rapport consolidé sécurité : comptes sans MFA, appareils non conformes, forwards externes, admins globaux.",
+    "tags": [
+      "export",
+      "sécurité",
+      "audit",
+      "M365",
+      "rapport"
+    ],
+    "code": "function Export-M365SecurityReport {\n    param(\n        [string]$OutputDir = \"C:\\\\Logs\\\\Security_$(Get-Date -f yyyyMMdd)\"\n    )\n\n    New-Item -Path $OutputDir -ItemType Directory -Force | Out-Null\n    $Summary = [System.Collections.Generic.List[PSCustomObject]]::new()\n\n    Write-Host \"=== Rapport Securite M365 ===\" -ForegroundColor Cyan\n\n    # 1. Appareils non conformes Intune\n    Write-Host \"1/5 - Appareils non conformes...\"\n    $NC = Get-MgDeviceManagementManagedDevice -All |\n          Where-Object { $_.ComplianceState -ne 'compliant' }\n    $NC | Select-Object DeviceName,UserPrincipalName,OperatingSystem,ComplianceState,LastSyncDateTime |\n          Export-Csv \"$OutputDir\\NonConformes.csv\" -NoTypeInformation -Encoding UTF8\n    $Summary.Add([PSCustomObject]@{ Categorie=\"Appareils non conformes\"; Nombre=$NC.Count; Fichier=\"NonConformes.csv\" })\n\n    # 2. Forwards externes Exchange\n    Write-Host \"2/5 - Forwards externes...\"\n    $FW = Get-Mailbox -ResultSize Unlimited |\n          Where-Object { $_.ForwardingSmtpAddress -or $_.ForwardingAddress }\n    $FW | Select-Object UserPrincipalName,DisplayName,ForwardingSmtpAddress,DeliverToMailboxAndForward |\n          Export-Csv \"$OutputDir\\Forwards.csv\" -NoTypeInformation -Encoding UTF8\n    $Summary.Add([PSCustomObject]@{ Categorie=\"Forwards externes\"; Nombre=$FW.Count; Fichier=\"Forwards.csv\" })\n\n    # 3. Comptes AD inactifs avec licences\n    Write-Host \"3/5 - Comptes inactifs avec licences...\"\n    $SkuMap = @{}\n    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }\n    $Inactifs = Get-MgUser -All -Property UserPrincipalName,AssignedLicenses,SignInActivity,AccountEnabled |\n        Where-Object {\n            $_.AccountEnabled -and\n            $_.AssignedLicenses.Count -gt 0 -and\n            $_.SignInActivity?.LastSignInDateTime -lt (Get-Date).AddDays(-90)\n        }\n    $Inactifs | ForEach-Object {\n        $Lics = ($_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] }) -join '; '\n        [PSCustomObject]@{ UPN=$_.UserPrincipalName; Licences=$Lics; DerniereConnexion=$_.SignInActivity?.LastSignInDateTime }\n    } | Export-Csv \"$OutputDir\\InactifsAvecLicences.csv\" -NoTypeInformation -Encoding UTF8\n    $Summary.Add([PSCustomObject]@{ Categorie=\"Inactifs avec licences\"; Nombre=$Inactifs.Count; Fichier=\"InactifsAvecLicences.csv\" })\n\n    # 4. Admins globaux\n    Write-Host \"4/5 - Admins globaux...\"\n    $AdminRole = Get-MgDirectoryRole | Where-Object { $_.DisplayName -eq 'Global Administrator' }\n    $Admins = if ($AdminRole) { Get-MgDirectoryRoleMember -DirectoryRoleId $AdminRole.Id -All } else { @() }\n    $Admins | ForEach-Object {\n        Get-MgUser -UserId $_.Id -ErrorAction SilentlyContinue\n    } | Select-Object DisplayName,UserPrincipalName,AccountEnabled |\n        Export-Csv \"$OutputDir\\GlobalAdmins.csv\" -NoTypeInformation -Encoding UTF8\n    $Summary.Add([PSCustomObject]@{ Categorie=\"Global Administrators\"; Nombre=$Admins.Count; Fichier=\"GlobalAdmins.csv\" })\n\n    # 5. Résumé\n    Write-Host \"5/5 - Generation resume...\"\n    $Summary | Export-Csv \"$OutputDir\\RESUME.csv\" -NoTypeInformation -Encoding UTF8\n\n    Write-Host \"`n=== RESUME ===\" -ForegroundColor Green\n    $Summary | Format-Table -AutoSize\n    Write-Host \"Rapports generes dans : $OutputDir\" -ForegroundColor Green\n}"
   }
 ];
 
