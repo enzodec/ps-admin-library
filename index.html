@@ -599,6 +599,16 @@ var DB = [
       "OS"
     ],
     "code": "function Get-IntuneComplianceSummaryByOS {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ComplianceSummary_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Devices = Get-MgDeviceManagementManagedDevice -All\n\n    $Summary = $Devices |\n        Group-Object OperatingSystem |\n        ForEach-Object {\n            $G   = $_.Group\n            $Tot = $G.Count\n            $OK  = ($G | Where-Object ComplianceState -eq \"compliant\").Count\n            $Pct = if ($Tot -gt 0) { [math]::Round($OK/$Tot*100,1) } else { 0 }\n\n            [PSCustomObject]@{\n                OS             = $_.Name\n                TotalAppareils = $Tot\n                Conformes      = $OK\n                NonConformes   = $Tot - $OK\n                TauxConformite = \"$Pct%\"\n            }\n        } | Sort-Object TotalAppareils -Descending\n\n    $Summary | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $Summary | Format-Table -AutoSize\n    Write-Host \"Rapport genere : $Output\"\n}"
+  },
+  {
+    "id": "ad1773017716416",
+    "cat": "ad",
+    "title": "test GIT",
+    "desc": "test GIT",
+    "tags": [
+      "connexion"
+    ],
+    "code": "test GIT"
   }
 ];
 
