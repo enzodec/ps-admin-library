@@ -4,119 +4,212 @@
     "cat": "ad",
     "title": "Créer un utilisateur AD",
     "desc": "Crée un compte avec attributs standards et génère un mot de passe aléatoire sécurisé.",
-    "tags": ["users", "création", "password"],
-    "code": "function New-ADUserComplet {\n    param(\n        [Parameter(Mandatory)][string]$Prenom,\n        [Parameter(Mandatory)][string]$Nom,\n        [Parameter(Mandatory)][string]$OU,\n        [string]$Departement = \"\",\n        [string]$Titre = \"\"\n    )\n\n    $SamAccount = ($Prenom[0] + $Nom).ToLower() -replace '[^a-z0-9]',''\n    $UPN        = \"$SamAccount@contoso.com\"\n\n    Add-Type -AssemblyName System.Web\n    $Password  = [System.Web.Security.Membership]::GeneratePassword(16,4)\n    $SecurePwd = ConvertTo-SecureString $Password -AsPlainText -Force\n\n    $Params = @{\n        SamAccountName        = $SamAccount\n        UserPrincipalName     = $UPN\n        GivenName             = $Prenom\n        Surname               = $Nom\n        DisplayName           = \"$Prenom $Nom\"\n        Name                  = \"$Prenom $Nom\"\n        Department            = $Departement\n        Title                 = $Titre\n        Path                  = $OU\n        AccountPassword       = $SecurePwd\n        Enabled               = $true\n        ChangePasswordAtLogon = $true\n    }\n\n    try {\n        New-ADUser @Params\n        Write-Host \"Utilisateur $SamAccount créé.\" -ForegroundColor Green\n        Write-Host \"Mot de passe temporaire : $Password\"\n    } catch {\n        Write-Error \"Erreur création : $_\"\n    }\n}"
+    "tags": [
+      "users",
+      "création",
+      "password"
+    ],
+    "code": "function New-ADUserComplet {\n    param(\n        [Parameter(Mandatory)][string]$Prenom,\n        [Parameter(Mandatory)][string]$Nom,\n        [Parameter(Mandatory)][string]$OU,\n        [string]$Departement = \"\",\n        [string]$Titre = \"\"\n    )\n\n    $SamAccount = ($Prenom[0] + $Nom).ToLower() -replace '[^a-z0-9]',''\n    $UPN        = \"$SamAccount@contoso.com\"\n\n    Add-Type -AssemblyName System.Web\n    $Password  = [System.Web.Security.Membership]::GeneratePassword(16,4)\n    $SecurePwd = ConvertTo-SecureString $Password -AsPlainText -Force\n\n    $Params = @{\n        SamAccountName        = $SamAccount\n        UserPrincipalName     = $UPN\n        GivenName             = $Prenom\n        Surname               = $Nom\n        DisplayName           = \"$Prenom $Nom\"\n        Name                  = \"$Prenom $Nom\"\n        Department            = $Departement\n        Title                 = $Titre\n        Path                  = $OU\n        AccountPassword       = $SecurePwd\n        Enabled               = $true\n        ChangePasswordAtLogon = $true\n    }\n\n    try {\n        New-ADUser @Params\n        Write-Host \"Utilisateur $SamAccount cree.\" -ForegroundColor Green\n        Write-Host \"Mot de passe temporaire : $Password\"\n    } catch {\n        Write-Error \"Erreur creation : $_\"\n    }\n}"
   },
   {
     "id": "ad2",
     "cat": "ad",
     "title": "Désactiver comptes inactifs",
-    "desc": "Détecte et désactive les comptes inactifs depuis N jours. Génère un rapport CSV. Support -WhatIf.",
-    "tags": ["users", "audit", "sécurité"],
-    "code": "function Disable-ADInactiveUsers {\n    param(\n        [int]$Jours      = 90,\n        [string]$Rapport = \"C:\\Logs\\Inactifs_$(Get-Date -f yyyyMMdd).csv\",\n        [switch]$WhatIf\n    )\n\n    $Limite  = (Get-Date).AddDays(-$Jours)\n    $Comptes = Get-ADUser -Filter {\n        LastLogonDate -lt $Limite -and Enabled -eq $true\n    } -Properties LastLogonDate, Department |\n    Where-Object { $_.DistinguishedName -notlike \"*OU=ServiceAccounts*\" }\n\n    $Résultat = foreach ($U in $Comptes) {\n        if (-not $WhatIf) { Disable-ADAccount -Identity $U.SamAccountName }\n        [PSCustomObject]@{\n            SamAccountName    = $U.SamAccountName\n            Nom               = $U.Name\n            Departement       = $U.Department\n            DerniereConnexion = $U.LastLogonDate\n            Action            = if ($WhatIf) { \"SIMULATION\" } else { \"DESACTIVE\" }\n        }\n    }\n\n    $Résultat | Export-Csv -Path $Rapport -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Résultat.Count) comptes traités — Rapport : $Rapport\"\n}"
+    "desc": "Détecte et désactive les comptes inactifs depuis N jours. Rapport CSV + support -WhatIf.",
+    "tags": [
+      "users",
+      "audit",
+      "sécurité"
+    ],
+    "code": "function Disable-ADInactiveUsers {\n    param(\n        [int]$Jours      = 90,\n        [string]$Rapport = \"C:\\\\Logs\\\\Inactifs_$(Get-Date -f yyyyMMdd).csv\",\n        [switch]$WhatIf\n    )\n\n    $Limite  = (Get-Date).AddDays(-$Jours)\n    $Comptes = Get-ADUser -Filter {\n        LastLogonDate -lt $Limite -and Enabled -eq $true\n    } -Properties LastLogonDate, Department |\n    Where-Object { $_.DistinguishedName -notlike \"*OU=ServiceAccounts*\" }\n\n    $Result = foreach ($U in $Comptes) {\n        if (-not $WhatIf) { Disable-ADAccount -Identity $U.SamAccountName }\n        [PSCustomObject]@{\n            SamAccountName    = $U.SamAccountName\n            Nom               = $U.Name\n            Departement       = $U.Department\n            DerniereConnexion = $U.LastLogonDate\n            Action            = if ($WhatIf) { \"SIMULATION\" } else { \"DESACTIVE\" }\n        }\n    }\n\n    $Result | Export-Csv -Path $Rapport -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Result.Count) comptes traites. Rapport : $Rapport\"\n}"
   },
   {
     "id": "ad3",
     "cat": "ad",
     "title": "Export membres de groupe (récursif)",
     "desc": "Exporte récursivement tous les membres d'un groupe AD, y compris les groupes imbriqués.",
-    "tags": ["groupes", "rapport", "export"],
-    "code": "function Get-ADGroupMembersReport {\n    param(\n        [Parameter(Mandatory)][string]$GroupName,\n        [string]$Output = \"C:\\Logs\\Groupe_$GroupName.csv\"\n    )\n\n    function Get-Recursive {\n        param([string]$Group, [string]$Parent = \"Direct\")\n        Get-ADGroupMember -Identity $Group | ForEach-Object {\n            if ($_.objectClass -eq 'group') {\n                Get-Recursive -Group $_.SamAccountName -Parent $Group\n            } else {\n                $U = Get-ADUser $_.SamAccountName -Properties EmailAddress,Department,Enabled\n                [PSCustomObject]@{\n                    Login        = $U.SamAccountName\n                    Nom          = $U.Name\n                    Email        = $U.EmailAddress\n                    Departement  = $U.Department\n                    Actif        = $U.Enabled\n                    GroupeParent = $Parent\n                }\n            }\n        }\n    }\n\n    $Membres = Get-Recursive -Group $GroupName\n    $Membres | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Membres.Count) membres exportés vers $Output\"\n}"
+    "tags": [
+      "groupes",
+      "rapport",
+      "export"
+    ],
+    "code": "function Get-ADGroupMembersReport {\n    param(\n        [Parameter(Mandatory)][string]$GroupName,\n        [string]$Output = \"C:\\\\Logs\\\\Groupe_$GroupName.csv\"\n    )\n\n    function Get-Recursive {\n        param([string]$Group, [string]$Parent = \"Direct\")\n        Get-ADGroupMember -Identity $Group | ForEach-Object {\n            if ($_.objectClass -eq 'group') {\n                Get-Recursive -Group $_.SamAccountName -Parent $Group\n            } else {\n                $U = Get-ADUser $_.SamAccountName -Properties EmailAddress,Department,Enabled\n                [PSCustomObject]@{\n                    Login        = $U.SamAccountName\n                    Nom          = $U.Name\n                    Email        = $U.EmailAddress\n                    Departement  = $U.Department\n                    Actif        = $U.Enabled\n                    GroupeParent = $Parent\n                }\n            }\n        }\n    }\n\n    $Membres = Get-Recursive -Group $GroupName\n    $Membres | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Membres.Count) membres exportes vers $Output\"\n}"
   },
   {
     "id": "ad4",
     "cat": "ad",
     "title": "Reset mot de passe + déverrouillage",
-    "desc": "Réinitialise le mot de passe, déverrouille le compte et force le changement à la prochaine connexion.",
-    "tags": ["users", "password", "unlock"],
-    "code": "function Reset-ADUserPassword {\n    param(\n        [Parameter(Mandatory)][string]$SamAccountName,\n        [string]$NewPassword = \"\"\n    )\n\n    if (-not $NewPassword) {\n        Add-Type -AssemblyName System.Web\n        $NewPassword = [System.Web.Security.Membership]::GeneratePassword(14,3)\n    }\n\n    $SecurePwd = ConvertTo-SecureString $NewPassword -AsPlainText -Force\n\n    try {\n        Unlock-ADAccount      -Identity $SamAccountName\n        Set-ADAccountPassword -Identity $SamAccountName -NewPassword $SecurePwd -Reset\n        Set-ADUser            -Identity $SamAccountName -ChangePasswordAtLogon $true\n\n        Write-Host \"Compte $SamAccountName réinitialisé.\" -ForegroundColor Green\n        Write-Host \"Mot de passe : $NewPassword\"\n        return $NewPassword\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+    "desc": "Réinitialise le mot de passe, déverrouille le compte et force le changement à la connexion.",
+    "tags": [
+      "users",
+      "password",
+      "unlock"
+    ],
+    "code": "function Reset-ADUserPassword {\n    param(\n        [Parameter(Mandatory)][string]$SamAccountName,\n        [string]$NewPassword = \"\"\n    )\n\n    if (-not $NewPassword) {\n        Add-Type -AssemblyName System.Web\n        $NewPassword = [System.Web.Security.Membership]::GeneratePassword(14,3)\n    }\n\n    $SecurePwd = ConvertTo-SecureString $NewPassword -AsPlainText -Force\n\n    try {\n        Unlock-ADAccount      -Identity $SamAccountName\n        Set-ADAccountPassword -Identity $SamAccountName -NewPassword $SecurePwd -Reset\n        Set-ADUser            -Identity $SamAccountName -ChangePasswordAtLogon $true\n\n        Write-Host \"Compte $SamAccountName reinitialise.\" -ForegroundColor Green\n        Write-Host \"Mot de passe : $NewPassword\"\n        return $NewPassword\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
   },
   {
     "id": "ad5",
     "cat": "ad",
     "title": "Sync attributs depuis CSV (RH)",
-    "desc": "Met à jour titre, département, manager et téléphone des utilisateurs AD depuis un export RH en CSV.",
-    "tags": ["users", "import", "RH"],
-    "code": "# CSV requis : SamAccountName, Title, Department, Manager, PhoneNumber\nfunction Sync-ADUsersFromCSV {\n    param(\n        [Parameter(Mandatory)][string]$CSVPath,\n        [switch]$WhatIf\n    )\n\n    $Users   = Import-Csv -Path $CSVPath -Encoding UTF8\n    $Results = foreach ($Row in $Users) {\n        try {\n            $Params = @{\n                Identity    = $Row.SamAccountName\n                Title       = $Row.Title\n                Department  = $Row.Department\n                OfficePhone = $Row.PhoneNumber\n            }\n            if ($Row.Manager) {\n                $Params.Manager = (Get-ADUser $Row.Manager).DistinguishedName\n            }\n            if (-not $WhatIf) { Set-ADUser @Params }\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"OK\" }\n        } catch {\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"ERREUR\"; Detail=$_.Exception.Message }\n        }\n    }\n\n    $Results | Format-Table -AutoSize\n    Write-Host \"OK:$(($Results|Where Status -eq OK).Count)  Erreurs:$(($Results|Where Status -eq ERREUR).Count)\"\n}"
+    "desc": "Met à jour titre, département, manager et téléphone des utilisateurs AD depuis un export RH CSV.",
+    "tags": [
+      "users",
+      "import",
+      "RH"
+    ],
+    "code": "# CSV requis : SamAccountName, Title, Department, Manager, PhoneNumber\nfunction Sync-ADUsersFromCSV {\n    param(\n        [Parameter(Mandatory)][string]$CSVPath,\n        [switch]$WhatIf\n    )\n\n    $Users   = Import-Csv -Path $CSVPath -Encoding UTF8\n    $Results = foreach ($Row in $Users) {\n        try {\n            $Params = @{\n                Identity    = $Row.SamAccountName\n                Title       = $Row.Title\n                Department  = $Row.Department\n                OfficePhone = $Row.PhoneNumber\n            }\n            if ($Row.Manager) {\n                $Params.Manager = (Get-ADUser $Row.Manager).DistinguishedName\n            }\n            if (-not $WhatIf) { Set-ADUser @Params }\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"OK\" }\n        } catch {\n            [PSCustomObject]@{ User=$Row.SamAccountName; Status=\"ERREUR\"; Detail=$_.Exception.Message }\n        }\n    }\n\n    $Results | Format-Table -AutoSize\n    Write-Host \"OK:$(($Results|Where-Object Status -eq 'OK').Count)  Erreurs:$(($Results|Where-Object Status -eq 'ERREUR').Count)\"\n}"
+  },
+  {
+    "id": "ad6",
+    "cat": "ad",
+    "title": "Rapport comptes expirés AD",
+    "desc": "Identifie tous les comptes dont la date d'expiration est dépassée ou proche, avec export CSV.",
+    "tags": [
+      "users",
+      "audit",
+      "expiration"
+    ],
+    "code": "function Get-ADExpiredAccounts {\n    param(\n        [int]$ExpirantDans = 30,\n        [string]$Output    = \"C:\\\\Logs\\\\ComptesExpires_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Now    = Get-Date\n    $Limite = $Now.AddDays($ExpirantDans)\n\n    $Comptes = Get-ADUser -Filter { Enabled -eq $true } `\n        -Properties AccountExpirationDate, Department, EmailAddress |\n    Where-Object {\n        $_.AccountExpirationDate -and $_.AccountExpirationDate -lt $Limite\n    }\n\n    $Rapport = $Comptes | ForEach-Object {\n        [PSCustomObject]@{\n            Login         = $_.SamAccountName\n            Nom           = $_.Name\n            Email         = $_.EmailAddress\n            Departement   = $_.Department\n            Expiration    = $_.AccountExpirationDate\n            Statut        = if ($_.AccountExpirationDate -lt $Now) { \"EXPIRE\" } else { \"EXPIRE BIENTOT\" }\n            JoursRestants = [math]::Round(($_.AccountExpirationDate - $Now).TotalDays)\n        }\n    } | Sort-Object JoursRestants\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) compte(s) expires ou expirant dans $ExpirantDans jours.\"\n    $Rapport | Format-Table Login, Statut, JoursRestants -AutoSize\n}"
+  },
+  {
+    "id": "ad7",
+    "cat": "ad",
+    "title": "Créer un groupe AD et ajouter membres",
+    "desc": "Crée un groupe AD (Sécurité ou Distribution) et y ajoute une liste de membres.",
+    "tags": [
+      "groupes",
+      "création"
+    ],
+    "code": "function New-ADGroupWithMembers {\n    param(\n        [Parameter(Mandatory)][string]$NomGroupe,\n        [Parameter(Mandatory)][string]$OU,\n        [string]$Description   = \"\",\n        [string]$GroupCategory = \"Security\",\n        [string]$GroupScope    = \"Global\",\n        [string[]]$Membres     = @()\n    )\n\n    try {\n        New-ADGroup -Name $NomGroupe `\n            -SamAccountName $NomGroupe `\n            -GroupCategory $GroupCategory `\n            -GroupScope $GroupScope `\n            -Path $OU `\n            -Description $Description\n\n        Write-Host \"Groupe $NomGroupe cree.\" -ForegroundColor Green\n\n        if ($Membres.Count -gt 0) {\n            Add-ADGroupMember -Identity $NomGroupe -Members $Membres\n            Write-Host \"$($Membres.Count) membre(s) ajoute(s).\"\n        }\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
   },
   {
     "id": "exo1",
     "cat": "exo",
     "title": "Connexion Exchange Online (safe)",
     "desc": "Connexion à Exchange Online avec détection de session existante et installation automatique du module.",
-    "tags": ["connexion", "auth"],
-    "code": "function Connect-EXOSafe {\n    param(\n        [string]$UPN   = \"\",\n        [switch]$Force\n    )\n\n    if (-not $Force) {\n        try {\n            if (Get-ConnectionInformation -ErrorAction Stop) {\n                Write-Host \"Déjà connecté à Exchange Online.\" -ForegroundColor Green\n                return\n            }\n        } catch {}\n    }\n\n    if (-not (Get-Module -ListAvailable ExchangeOnlineManagement)) {\n        Write-Host \"Installation du module ExchangeOnlineManagement...\"\n        Install-Module ExchangeOnlineManagement -Force -Scope CurrentUser\n    }\n\n    Import-Module ExchangeOnlineManagement\n    $P = @{ ShowBanner = $false }\n    if ($UPN) { $P.UserPrincipalName = $UPN }\n\n    try {\n        Connect-ExchangeOnline @P\n        Write-Host \"Connecté à Exchange Online.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Connexion impossible : $_\"\n    }\n}"
+    "tags": [
+      "connexion",
+      "auth"
+    ],
+    "code": "function Connect-EXOSafe {\n    param(\n        [string]$UPN   = \"\",\n        [switch]$Force\n    )\n\n    if (-not $Force) {\n        try {\n            if (Get-ConnectionInformation -ErrorAction Stop) {\n                Write-Host \"Deja connecte a Exchange Online.\" -ForegroundColor Green\n                return\n            }\n        } catch {}\n    }\n\n    if (-not (Get-Module -ListAvailable ExchangeOnlineManagement)) {\n        Write-Host \"Installation du module ExchangeOnlineManagement...\"\n        Install-Module ExchangeOnlineManagement -Force -Scope CurrentUser\n    }\n\n    Import-Module ExchangeOnlineManagement\n    $P = @{ ShowBanner = $false }\n    if ($UPN) { $P.UserPrincipalName = $UPN }\n\n    try {\n        Connect-ExchangeOnline @P\n        Write-Host \"Connecte a Exchange Online.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Connexion impossible : $_\"\n    }\n}"
   },
   {
     "id": "exo2",
     "cat": "exo",
     "title": "Rapport taille des boîtes aux lettres",
     "desc": "Génère un rapport trié par taille de toutes les boîtes Exchange Online avec quota et dernière connexion.",
-    "tags": ["mailbox", "rapport", "storage"],
-    "code": "function Get-MailboxSizeReport {\n    param(\n        [string]$Output = \"C:\\Logs\\MailboxSizes_$(Get-Date -f yyyyMMdd).csv\",\n        [int]$Top = 0\n    )\n\n    $Mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails UserMailbox\n    $Report = $Mailboxes | ForEach-Object {\n        $Stats  = Get-MailboxStatistics -Identity $_.ExchangeGuid\n        $SizeMB = [math]::Round($Stats.TotalItemSize.Value.ToBytes() / 1MB, 2)\n        [PSCustomObject]@{\n            DisplayName       = $_.DisplayName\n            UPN               = $_.UserPrincipalName\n            TailleMB          = $SizeMB\n            NbItems           = $Stats.ItemCount\n            DerniereConnexion = $Stats.LastLogonTime\n            Quota             = $_.ProhibitSendReceiveQuota\n        }\n    } | Sort-Object TailleMB -Descending\n\n    if ($Top -gt 0) { $Report = $Report | Select-Object -First $Top }\n    $Report | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Report.Count) boîtes exportées vers $Output\"\n}"
+    "tags": [
+      "mailbox",
+      "rapport",
+      "storage"
+    ],
+    "code": "function Get-MailboxSizeReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\MailboxSizes_$(Get-Date -f yyyyMMdd).csv\",\n        [int]$Top = 0\n    )\n\n    $Mailboxes = Get-Mailbox -ResultSize Unlimited -RecipientTypeDetails UserMailbox\n    $Report = $Mailboxes | ForEach-Object {\n        $Stats  = Get-MailboxStatistics -Identity $_.ExchangeGuid\n        $SizeMB = [math]::Round($Stats.TotalItemSize.Value.ToBytes() / 1MB, 2)\n        [PSCustomObject]@{\n            DisplayName       = $_.DisplayName\n            UPN               = $_.UserPrincipalName\n            TailleMB          = $SizeMB\n            NbItems           = $Stats.ItemCount\n            DerniereConnexion = $Stats.LastLogonTime\n            Quota             = $_.ProhibitSendReceiveQuota\n        }\n    } | Sort-Object TailleMB -Descending\n\n    if ($Top -gt 0) { $Report = $Report | Select-Object -First $Top }\n    $Report | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Report.Count) boites exportees vers $Output\"\n}"
   },
   {
     "id": "exo3",
     "cat": "exo",
     "title": "Créer boîte partagée + permissions",
     "desc": "Crée une boîte partagée Exchange Online et attribue FullAccess + SendAs à une liste d'utilisateurs.",
-    "tags": ["mailbox", "shared", "permissions"],
-    "code": "function New-SharedMailboxComplete {\n    param(\n        [Parameter(Mandatory)][string]$DisplayName,\n        [Parameter(Mandatory)][string]$Alias,\n        [string]$Domain         = \"contoso.com\",\n        [string[]]$FullAccessTo = @(),\n        [string[]]$SendAsTo     = @()\n    )\n\n    $Email = \"$Alias@$Domain\"\n\n    try {\n        New-Mailbox -Shared -Name $DisplayName -DisplayName $DisplayName `\n            -Alias $Alias -PrimarySmtpAddress $Email\n        Write-Host \"Boîte $Email créée.\" -ForegroundColor Green\n        Start-Sleep -Seconds 5\n\n        foreach ($U in $FullAccessTo) {\n            Add-MailboxPermission -Identity $Email -User $U `\n                -AccessRights FullAccess -InheritanceType All -AutoMapping $true\n            Write-Host \"  FullAccess accordé à $U\"\n        }\n        foreach ($U in $SendAsTo) {\n            Add-RecipientPermission -Identity $Email -Trustee $U `\n                -AccessRights SendAs -Confirm:$false\n            Write-Host \"  SendAs accordé à $U\"\n        }\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+    "tags": [
+      "mailbox",
+      "shared",
+      "permissions"
+    ],
+    "code": "function New-SharedMailboxComplete {\n    param(\n        [Parameter(Mandatory)][string]$DisplayName,\n        [Parameter(Mandatory)][string]$Alias,\n        [string]$Domain         = \"contoso.com\",\n        [string[]]$FullAccessTo = @(),\n        [string[]]$SendAsTo     = @()\n    )\n\n    $Email = \"$Alias@$Domain\"\n\n    try {\n        New-Mailbox -Shared -Name $DisplayName -DisplayName $DisplayName `\n            -Alias $Alias -PrimarySmtpAddress $Email\n        Write-Host \"Boite $Email creee.\" -ForegroundColor Green\n        Start-Sleep -Seconds 5\n\n        foreach ($U in $FullAccessTo) {\n            Add-MailboxPermission -Identity $Email -User $U `\n                -AccessRights FullAccess -InheritanceType All -AutoMapping $true\n            Write-Host \"  FullAccess : $U\"\n        }\n        foreach ($U in $SendAsTo) {\n            Add-RecipientPermission -Identity $Email -Trustee $U `\n                -AccessRights SendAs -Confirm:$false\n            Write-Host \"  SendAs : $U\"\n        }\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
   },
   {
     "id": "exo4",
     "cat": "exo",
     "title": "Audit des forwards externes",
-    "desc": "Détecte toutes les boîtes avec un transfert automatique vers une adresse externe — risque de fuite de données.",
-    "tags": ["audit", "sécurité", "forward"],
-    "code": "function Get-ExternalForwardAudit {\n    param(\n        [string]$Output = \"C:\\Logs\\ExternalForwards_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Forwards = Get-Mailbox -ResultSize Unlimited |\n        Where-Object { $_.ForwardingAddress -or $_.ForwardingSmtpAddress } |\n        ForEach-Object {\n            [PSCustomObject]@{\n                UPN         = $_.UserPrincipalName\n                DisplayName = $_.DisplayName\n                ForwardVers = $_.ForwardingSmtpAddress ?? $_.ForwardingAddress\n                GarderCopie = $_.DeliverToMailboxAndForward\n                Détecté     = Get-Date -Format \"yyyy-MM-dd HH:mm\"\n            }\n        }\n\n    if ($Forwards.Count -eq 0) {\n        Write-Host \"Aucun forward externe détecté.\" -ForegroundColor Green\n        return\n    }\n\n    $Forwards | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Forwards.Count) forward(s) externe(s) ! Rapport : $Output\"\n    $Forwards | Format-Table -AutoSize\n}"
+    "desc": "Détecte toutes les boîtes avec un transfert automatique vers une adresse externe — risque de fuite.",
+    "tags": [
+      "audit",
+      "sécurité",
+      "forward"
+    ],
+    "code": "function Get-ExternalForwardAudit {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ExternalForwards_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Forwards = Get-Mailbox -ResultSize Unlimited |\n        Where-Object { $_.ForwardingAddress -or $_.ForwardingSmtpAddress } |\n        ForEach-Object {\n            [PSCustomObject]@{\n                UPN         = $_.UserPrincipalName\n                DisplayName = $_.DisplayName\n                ForwardVers = $_.ForwardingSmtpAddress ?? $_.ForwardingAddress\n                GarderCopie = $_.DeliverToMailboxAndForward\n                Detecte     = Get-Date -Format \"yyyy-MM-dd HH:mm\"\n            }\n        }\n\n    if ($Forwards.Count -eq 0) {\n        Write-Host \"Aucun forward externe detecte.\" -ForegroundColor Green\n        return\n    }\n    $Forwards | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Forwards.Count) forward(s) externe(s) detecte(s) ! Rapport : $Output\"\n    $Forwards | Format-Table -AutoSize\n}"
   },
   {
     "id": "exo5",
     "cat": "exo",
     "title": "Règle de transport personnalisée",
-    "desc": "Crée une règle Exchange Online pour bloquer, rediriger ou tagguer des emails selon des critères avancés.",
-    "tags": ["transport", "sécurité", "règles"],
-    "code": "function New-CustomTransportRule {\n    param(\n        [Parameter(Mandatory)][string]$Nom,\n        [string[]]$DomainesBloqués = @(),\n        [string[]]$MotsClésSujet   = @(),\n        [string]$Action            = \"Reject\",\n        [string]$RedirectVers      = \"\",\n        [string]$MessageRefus      = \"Message bloqué par la politique de sécurité.\"\n    )\n\n    $P = @{ Name=$Nom; Priority=0; Enabled=$true }\n    if ($DomainesBloqués) { $P.SenderDomainIs       = $DomainesBloqués }\n    if ($MotsClésSujet)   { $P.SubjectContainsWords = $MotsClésSujet   }\n\n    switch ($Action) {\n        \"Reject\"    { $P.RejectMessageReasonText = $MessageRefus }\n        \"Redirect\"  { $P.RedirectMessageTo = $RedirectVers }\n        \"AddHeader\" { $P.SetHeaderName=\"X-Flag\"; $P.SetHeaderValue=\"Suspicious\" }\n    }\n\n    try {\n        New-TransportRule @P\n        Write-Host \"Règle '$Nom' créée.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+    "desc": "Crée une règle Exchange Online pour bloquer, rediriger ou tagguer des emails selon des critères.",
+    "tags": [
+      "transport",
+      "sécurité",
+      "règles"
+    ],
+    "code": "function New-CustomTransportRule {\n    param(\n        [Parameter(Mandatory)][string]$Nom,\n        [string[]]$DomainesBloqués = @(),\n        [string[]]$MotsClésSujet   = @(),\n        [string]$Action            = \"Reject\",\n        [string]$RedirectVers      = \"\",\n        [string]$MessageRefus      = \"Message bloque par la politique de securite.\"\n    )\n\n    $P = @{ Name=$Nom; Priority=0; Enabled=$true }\n    if ($DomainesBloqués) { $P.SenderDomainIs       = $DomainesBloqués }\n    if ($MotsClésSujet)   { $P.SubjectContainsWords = $MotsClésSujet   }\n\n    switch ($Action) {\n        \"Reject\"    { $P.RejectMessageReasonText = $MessageRefus }\n        \"Redirect\"  { $P.RedirectMessageTo = $RedirectVers }\n        \"AddHeader\" { $P.SetHeaderName=\"X-Flag\"; $P.SetHeaderValue=\"Suspicious\" }\n    }\n\n    try {\n        New-TransportRule @P\n        Write-Host \"Regle '$Nom' creee.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "exo6",
+    "cat": "exo",
+    "title": "Rapport listes de distribution",
+    "desc": "Exporte toutes les listes de distribution avec leur nombre de membres et adresse email principale.",
+    "tags": [
+      "groupes",
+      "rapport",
+      "distribution"
+    ],
+    "code": "function Get-DistributionListReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\DistribLists_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Lists = Get-DistributionGroup -ResultSize Unlimited\n\n    $Rapport = $Lists | ForEach-Object {\n        $Members = Get-DistributionGroupMember -Identity $_.PrimarySmtpAddress -ResultSize Unlimited\n        [PSCustomObject]@{\n            Nom          = $_.DisplayName\n            Email        = $_.PrimarySmtpAddress\n            NbMembres    = $Members.Count\n            ManagedBy    = ($_.ManagedBy -join \"; \")\n            RequireAuth  = $_.RequireSenderAuthenticationEnabled\n            CreationDate = $_.WhenCreated\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) listes exportees vers $Output\"\n}"
   },
   {
     "id": "aad1",
     "cat": "aad",
     "title": "Connexion Microsoft Graph / Entra",
     "desc": "Connexion à Microsoft Graph avec support interactif et App Registration pour l'automatisation.",
-    "tags": ["connexion", "auth"],
-    "code": "function Connect-MgGraphSafe {\n    param(\n        [string[]]$Scopes = @(\"User.Read.All\",\"Group.ReadWrite.All\",\"Directory.Read.All\"),\n        [string]$TenantId     = \"\",\n        [string]$ClientId     = \"\",\n        [string]$ClientSecret = \"\"\n    )\n\n    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {\n        Write-Host \"Installation du module Microsoft.Graph...\"\n        Install-Module Microsoft.Graph -Force -Scope CurrentUser\n    }\n\n    if ($ClientId -and $ClientSecret -and $TenantId) {\n        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force\n        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)\n        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred\n        Write-Host \"Connecté via App Registration.\" -ForegroundColor Green\n    } else {\n        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId\n        Write-Host \"Connecté de façon interactive.\" -ForegroundColor Green\n    }\n}"
+    "tags": [
+      "connexion",
+      "auth"
+    ],
+    "code": "function Connect-MgGraphSafe {\n    param(\n        [string[]]$Scopes = @(\"User.Read.All\",\"Group.ReadWrite.All\",\"Directory.Read.All\"),\n        [string]$TenantId     = \"\",\n        [string]$ClientId     = \"\",\n        [string]$ClientSecret = \"\"\n    )\n\n    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {\n        Write-Host \"Installation Microsoft.Graph...\"\n        Install-Module Microsoft.Graph -Force -Scope CurrentUser\n    }\n\n    if ($ClientId -and $ClientSecret -and $TenantId) {\n        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force\n        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)\n        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred\n        Write-Host \"Connecte via App Registration.\" -ForegroundColor Green\n    } else {\n        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId\n        Write-Host \"Connecte de facon interactive.\" -ForegroundColor Green\n    }\n}"
   },
   {
     "id": "aad2",
     "cat": "aad",
     "title": "Rapport licences Entra ID",
-    "desc": "Liste les licences par utilisateur et identifie les comptes inactifs depuis 90j avec des licences actives.",
-    "tags": ["licences", "rapport", "audit"],
-    "code": "function Get-EntraLicenseReport {\n    param(\n        [string]$Output = \"C:\\Logs\\Licences_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $SkuMap = @{}\n    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }\n\n    $Rapport = Get-MgUser -All `\n        -Property DisplayName,UserPrincipalName,AssignedLicenses,SignInActivity |\n    ForEach-Object {\n        $Lics = $_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] ?? $_.SkuId }\n        $Cnx  = $_.SignInActivity?.LastSignInDateTime\n        [PSCustomObject]@{\n            DisplayName        = $_.DisplayName\n            UPN                = $_.UserPrincipalName\n            Licences           = ($Lics -join \"; \")\n            NbLicences         = $Lics.Count\n            DerniereConnexion  = $Cnx\n            InactifAvecLicence = ($Cnx -lt (Get-Date).AddDays(-90) -and $Lics.Count -gt 0)\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $N = ($Rapport | Where-Object InactifAvecLicence).Count\n    Write-Warning \"$N utilisateurs inactifs ont encore des licences.\"\n}"
+    "desc": "Liste les licences par utilisateur et identifie les comptes inactifs depuis 90j avec licences actives.",
+    "tags": [
+      "licences",
+      "rapport",
+      "audit"
+    ],
+    "code": "function Get-EntraLicenseReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\Licences_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $SkuMap = @{}\n    Get-MgSubscribedSku | ForEach-Object { $SkuMap[$_.SkuId] = $_.SkuPartNumber }\n\n    $Rapport = Get-MgUser -All `\n        -Property DisplayName,UserPrincipalName,AssignedLicenses,SignInActivity |\n    ForEach-Object {\n        $Lics = $_.AssignedLicenses | ForEach-Object { $SkuMap[$_.SkuId] ?? $_.SkuId }\n        $Cnx  = $_.SignInActivity?.LastSignInDateTime\n        [PSCustomObject]@{\n            DisplayName        = $_.DisplayName\n            UPN                = $_.UserPrincipalName\n            Licences           = ($Lics -join \"; \")\n            NbLicences         = $Lics.Count\n            DerniereConnexion  = $Cnx\n            InactifAvecLicence = ($Cnx -lt (Get-Date).AddDays(-90) -and $Lics.Count -gt 0)\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $N = ($Rapport | Where-Object InactifAvecLicence).Count\n    Write-Warning \"$N utilisateurs inactifs ont encore des licences.\"\n}"
   },
   {
     "id": "aad3",
     "cat": "aad",
     "title": "Révoquer sessions utilisateur",
     "desc": "Révoque tous les tokens d'un utilisateur compromis en urgence. Option pour désactiver le compte.",
-    "tags": ["sécurité", "incident", "tokens"],
-    "code": "function Revoke-EntraUserSessions {\n    param(\n        [Parameter(Mandatory)][string[]]$UPNs,\n        [switch]$DisableAccount\n    )\n\n    foreach ($UPN in $UPNs) {\n        try {\n            $User = Get-MgUser -UserId $UPN -ErrorAction Stop\n            Revoke-MgUserSignInSession -UserId $User.Id\n            Write-Host \"Sessions révoquées : $UPN\" -ForegroundColor Green\n\n            if ($DisableAccount) {\n                Update-MgUser -UserId $User.Id -AccountEnabled:$false\n                Write-Warning \"Compte désactivé : $UPN\"\n            }\n        } catch {\n            Write-Error \"Erreur pour $UPN : $_\"\n        }\n    }\n}"
+    "tags": [
+      "sécurité",
+      "incident",
+      "tokens"
+    ],
+    "code": "function Revoke-EntraUserSessions {\n    param(\n        [Parameter(Mandatory)][string[]]$UPNs,\n        [switch]$DisableAccount\n    )\n\n    foreach ($UPN in $UPNs) {\n        try {\n            $User = Get-MgUser -UserId $UPN -ErrorAction Stop\n            Revoke-MgUserSignInSession -UserId $User.Id\n            Write-Host \"Sessions revoquees : $UPN\" -ForegroundColor Green\n\n            if ($DisableAccount) {\n                Update-MgUser -UserId $User.Id -AccountEnabled:$false\n                Write-Warning \"Compte desactive : $UPN\"\n            }\n        } catch {\n            Write-Error \"Erreur pour $UPN : $_\"\n        }\n    }\n}"
   },
   {
     "id": "aad4",
     "cat": "aad",
     "title": "Audit accès conditionnel (CA)",
-    "desc": "Liste toutes les politiques CA avec état, utilisateurs/groupes ciblés, apps et contrôles requis (MFA...).",
-    "tags": ["CA", "sécurité", "audit"],
-    "code": "function Get-ConditionalAccessAudit {\n    param(\n        [string]$Output = \"C:\\Logs\\CA_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Rapport = Get-MgIdentityConditionalAccessPolicy | ForEach-Object {\n        [PSCustomObject]@{\n            Nom         = $_.DisplayName\n            Statut      = $_.State\n            UsersIncl   = ($_.Conditions.Users.IncludeUsers   -join \"; \")\n            GroupesIncl = ($_.Conditions.Users.IncludeGroups  -join \"; \")\n            AppsIncl    = ($_.Conditions.Applications.IncludeApplications -join \"; \")\n            Controles   = ($_.GrantControls?.BuiltInControls  -join \"; \")\n            MFA         = ($_.GrantControls?.BuiltInControls -contains \"mfa\")\n            Créé        = $_.CreatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) politiques CA exportées.\"\n    $Rapport | Format-Table Nom, Statut, MFA -AutoSize\n}"
+    "desc": "Liste toutes les politiques CA avec état, utilisateurs/groupes ciblés, apps et contrôles (MFA...).",
+    "tags": [
+      "CA",
+      "sécurité",
+      "audit"
+    ],
+    "code": "function Get-ConditionalAccessAudit {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\CA_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Rapport = Get-MgIdentityConditionalAccessPolicy | ForEach-Object {\n        [PSCustomObject]@{\n            Nom         = $_.DisplayName\n            Statut      = $_.State\n            UsersIncl   = ($_.Conditions.Users.IncludeUsers   -join \"; \")\n            GroupesIncl = ($_.Conditions.Users.IncludeGroups  -join \"; \")\n            AppsIncl    = ($_.Conditions.Applications.IncludeApplications -join \"; \")\n            Controles   = ($_.GrantControls?.BuiltInControls  -join \"; \")\n            MFA         = ($_.GrantControls?.BuiltInControls -contains \"mfa\")\n            Cree        = $_.CreatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) politiques CA exportees.\"\n    $Rapport | Format-Table Nom, Statut, MFA -AutoSize\n}"
   },
   {
     "id": "graph1",
     "cat": "graph",
     "title": "Wrapper REST Graph + pagination auto",
-    "desc": "Appel générique à n'importe quel endpoint Graph avec suivi automatique de la pagination @odata.nextLink.",
-    "tags": ["api", "rest", "pagination"],
+    "desc": "Appel générique à n'importe quel endpoint Graph avec suivi automatique de la pagination.",
+    "tags": [
+      "api",
+      "rest",
+      "pagination"
+    ],
     "code": "function Invoke-GraphAPI {\n    param(\n        [Parameter(Mandatory)][string]$Endpoint,\n        [string]$Method = \"GET\",\n        [object]$Body   = $null,\n        [switch]$GetAll\n    )\n\n    $Token   = (Get-MgContext).AccessToken\n    $Headers = @{\n        Authorization  = \"Bearer $Token\"\n        \"Content-Type\" = \"application/json\"\n    }\n    $URL   = \"https://graph.microsoft.com/v1.0/$($Endpoint.TrimStart('/'))\"\n    $Items = [System.Collections.Generic.List[object]]::new()\n\n    do {\n        $P = @{ Uri=$URL; Method=$Method; Headers=$Headers }\n        if ($Body -and $Method -ne \"GET\") {\n            $P.Body = ($Body | ConvertTo-Json -Depth 10)\n        }\n        $R = Invoke-RestMethod @P\n\n        if ($R.value) { $Items.AddRange($R.value) }\n        else          { return $R }\n\n        $URL = $R.\"@odata.nextLink\"\n    } while ($GetAll -and $URL)\n\n    return $Items\n}"
   },
   {
@@ -124,23 +217,178 @@
     "cat": "graph",
     "title": "Envoyer un email via Graph (SendMail)",
     "desc": "Envoie un email HTML avec pièces jointes optionnelles via Microsoft Graph depuis n'importe quelle boîte.",
-    "tags": ["email", "sendmail", "notification"],
-    "code": "function Send-GraphMail {\n    param(\n        [Parameter(Mandatory)][string]$From,\n        [Parameter(Mandatory)][string[]]$To,\n        [Parameter(Mandatory)][string]$Subject,\n        [Parameter(Mandatory)][string]$Body,\n        [string]$BodyType  = \"HTML\",\n        [string[]]$CC      = @(),\n        [string[]]$Pieces  = @()\n    )\n\n    $ToList = $To | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $CCList = $CC | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $Attach = $Pieces | ForEach-Object {\n        @{\n            \"@odata.type\" = \"#microsoft.graph.fileAttachment\"\n            name          = [IO.Path]::GetFileName($_)\n            contentBytes  = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_))\n        }\n    }\n\n    $Payload = @{\n        message = @{\n            subject      = $Subject\n            body         = @{ contentType=$BodyType; content=$Body }\n            toRecipients = $ToList\n            ccRecipients = $CCList\n            attachments  = $Attach\n        }\n        saveToSentItems = $true\n    }\n\n    $UserId = (Get-MgUser -UserId $From).Id\n    Invoke-MgGraphRequest -Method POST `\n        -Uri \"users/$UserId/sendMail\" `\n        -Body ($Payload | ConvertTo-Json -Depth 10)\n\n    Write-Host \"Email envoyé depuis $From.\" -ForegroundColor Green\n}"
+    "tags": [
+      "email",
+      "sendmail",
+      "notification"
+    ],
+    "code": "function Send-GraphMail {\n    param(\n        [Parameter(Mandatory)][string]$From,\n        [Parameter(Mandatory)][string[]]$To,\n        [Parameter(Mandatory)][string]$Subject,\n        [Parameter(Mandatory)][string]$Body,\n        [string]$BodyType  = \"HTML\",\n        [string[]]$CC      = @(),\n        [string[]]$Pieces  = @()\n    )\n\n    $ToList = $To | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $CCList = $CC | ForEach-Object { @{ emailAddress=@{ address=$_ } } }\n    $Attach = $Pieces | ForEach-Object {\n        @{\n            \"@odata.type\" = \"#microsoft.graph.fileAttachment\"\n            name          = [IO.Path]::GetFileName($_)\n            contentBytes  = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_))\n        }\n    }\n\n    $Payload = @{\n        message = @{\n            subject      = $Subject\n            body         = @{ contentType=$BodyType; content=$Body }\n            toRecipients = $ToList\n            ccRecipients = $CCList\n            attachments  = $Attach\n        }\n        saveToSentItems = $true\n    }\n\n    $UserId = (Get-MgUser -UserId $From).Id\n    Invoke-MgGraphRequest -Method POST `\n        -Uri \"users/$UserId/sendMail\" `\n        -Body ($Payload | ConvertTo-Json -Depth 10)\n\n    Write-Host \"Email envoye depuis $From.\" -ForegroundColor Green\n}"
   },
   {
     "id": "graph3",
     "cat": "graph",
-    "title": "Rapport connexions risquées (Identity Protection)",
-    "desc": "Récupère les utilisateurs à risque détectés par Entra ID Protection avec niveau, état et détail du risque.",
-    "tags": ["sécurité", "risque", "identity"],
-    "code": "function Get-RiskyUsersReport {\n    param(\n        [string]$RiskLevel = \"high\",\n        [string]$Output    = \"C:\\Logs\\RiskyUsers_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $URI    = \"identityProtection/riskyUsers?`$filter=riskLevel eq '$RiskLevel'\"\n    $Result = Invoke-MgGraphRequest -Method GET -Uri $URI\n\n    $Rapport = $Result.value | ForEach-Object {\n        [PSCustomObject]@{\n            UPN         = $_.userPrincipalName\n            Nom         = $_.userDisplayName\n            RiskLevel   = $_.riskLevel\n            RiskState   = $_.riskState\n            RiskDetail  = $_.riskDetail\n            DerniereMAJ = $_.riskLastUpdatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) utilisateur(s) à risque '$RiskLevel' détecté(s).\"\n    return $Rapport\n}"
+    "title": "Rapport connexions risquées",
+    "desc": "Récupère les utilisateurs à risque détectés par Entra ID Protection avec niveau, état et détail.",
+    "tags": [
+      "sécurité",
+      "risque",
+      "identity"
+    ],
+    "code": "function Get-RiskyUsersReport {\n    param(\n        [string]$RiskLevel = \"high\",\n        [string]$Output    = \"C:\\\\Logs\\\\RiskyUsers_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $URI    = \"identityProtection/riskyUsers?`$filter=riskLevel eq '$RiskLevel'\"\n    $Result = Invoke-MgGraphRequest -Method GET -Uri $URI\n\n    $Rapport = $Result.value | ForEach-Object {\n        [PSCustomObject]@{\n            UPN         = $_.userPrincipalName\n            Nom         = $_.userDisplayName\n            RiskLevel   = $_.riskLevel\n            RiskState   = $_.riskState\n            RiskDetail  = $_.riskDetail\n            DerniereMAJ = $_.riskLastUpdatedDateTime\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) utilisateur(s) a risque '$RiskLevel' detecte(s).\"\n    return $Rapport\n}"
   },
   {
     "id": "graph4",
     "cat": "graph",
     "title": "Créer un channel Microsoft Teams",
     "desc": "Crée automatiquement un channel standard ou privé dans une équipe Teams existante via Graph API.",
-    "tags": ["teams", "channel", "collaboration"],
-    "code": "function New-TeamsChannel {\n    param(\n        [Parameter(Mandatory)][string]$TeamId,\n        [Parameter(Mandatory)][string]$Nom,\n        [string]$Description = \"\",\n        [string]$Type        = \"standard\"\n    )\n\n    $Body = @{\n        displayName    = $Nom\n        description    = $Description\n        membershipType = $Type\n    } | ConvertTo-Json\n\n    try {\n        $R = Invoke-MgGraphRequest `\n            -Method POST `\n            -Uri \"teams/$TeamId/channels\" `\n            -Body $Body `\n            -ContentType \"application/json\"\n\n        Write-Host \"Channel '$Nom' créé.\" -ForegroundColor Green\n        Write-Host \"URL : $($R.webUrl)\"\n        return $R\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+    "tags": [
+      "teams",
+      "channel",
+      "collaboration"
+    ],
+    "code": "function New-TeamsChannel {\n    param(\n        [Parameter(Mandatory)][string]$TeamId,\n        [Parameter(Mandatory)][string]$Nom,\n        [string]$Description = \"\",\n        [string]$Type        = \"standard\"\n    )\n\n    $Body = @{\n        displayName    = $Nom\n        description    = $Description\n        membershipType = $Type\n    } | ConvertTo-Json\n\n    try {\n        $R = Invoke-MgGraphRequest `\n            -Method POST `\n            -Uri \"teams/$TeamId/channels\" `\n            -Body $Body `\n            -ContentType \"application/json\"\n\n        Write-Host \"Channel '$Nom' cree.\" -ForegroundColor Green\n        Write-Host \"URL : $($R.webUrl)\"\n        return $R\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "intune1",
+    "cat": "intune",
+    "title": "Connexion Intune via Graph",
+    "desc": "Connexion à Microsoft Graph avec les scopes nécessaires pour gérer Intune / Microsoft Endpoint Manager.",
+    "tags": [
+      "connexion",
+      "auth"
+    ],
+    "code": "function Connect-IntuneGraph {\n    param(\n        [string]$TenantId     = \"\",\n        [string]$ClientId     = \"\",\n        [string]$ClientSecret = \"\"\n    )\n\n    $Scopes = @(\n        \"DeviceManagementManagedDevices.ReadWrite.All\",\n        \"DeviceManagementConfiguration.ReadWrite.All\",\n        \"DeviceManagementApps.ReadWrite.All\",\n        \"DeviceManagementServiceConfig.ReadWrite.All\"\n    )\n\n    if (-not (Get-Module -ListAvailable Microsoft.Graph)) {\n        Install-Module Microsoft.Graph -Force -Scope CurrentUser\n    }\n\n    if ($ClientId -and $ClientSecret -and $TenantId) {\n        $Secure = ConvertTo-SecureString $ClientSecret -AsPlainText -Force\n        $Cred   = New-Object System.Management.Automation.PSCredential($ClientId, $Secure)\n        Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $Cred\n    } else {\n        Connect-MgGraph -Scopes $Scopes -TenantId $TenantId\n    }\n\n    Write-Host \"Connecte a Intune via Graph.\" -ForegroundColor Green\n}"
+  },
+  {
+    "id": "intune2",
+    "cat": "intune",
+    "title": "Rapport inventaire appareils Intune",
+    "desc": "Exporte tous les appareils gérés par Intune avec OS, conformité, dernier check-in et utilisateur.",
+    "tags": [
+      "appareils",
+      "rapport",
+      "inventaire"
+    ],
+    "code": "function Get-IntuneDeviceInventory {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\IntuneDevices_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Devices = Get-MgDeviceManagementManagedDevice -All\n\n    $Rapport = $Devices | ForEach-Object {\n        [PSCustomObject]@{\n            Nom            = $_.DeviceName\n            Utilisateur    = $_.UserPrincipalName\n            OS             = $_.OperatingSystem\n            Version        = $_.OsVersion\n            Conformite     = $_.ComplianceState\n            GestionType    = $_.ManagementAgent\n            DernierCheckIn = $_.LastSyncDateTime\n            Fabricant      = $_.Manufacturer\n            Modele         = $_.Model\n            NumeroSerie    = $_.SerialNumber\n            Chiffrement    = $_.IsEncrypted\n            DeviceId       = $_.Id\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) appareils exportes vers $Output\"\n    $NC = ($Rapport | Where-Object Conformite -ne \"compliant\").Count\n    if ($NC -gt 0) { Write-Warning \"$NC appareil(s) non conformes.\" }\n}"
+  },
+  {
+    "id": "intune3",
+    "cat": "intune",
+    "title": "Forcer sync appareil Intune",
+    "desc": "Force la synchronisation immédiate d'un ou plusieurs appareils Intune avec le serveur MDM.",
+    "tags": [
+      "appareils",
+      "sync",
+      "gestion"
+    ],
+    "code": "function Invoke-IntuneDeviceSync {\n    param(\n        [Parameter(Mandatory)][string[]]$DeviceNames\n    )\n\n    foreach ($Name in $DeviceNames) {\n        try {\n            $Device = Get-MgDeviceManagementManagedDevice -Filter \"deviceName eq '$Name'\" |\n                      Select-Object -First 1\n\n            if (-not $Device) {\n                Write-Warning \"Appareil '$Name' introuvable dans Intune.\"\n                continue\n            }\n\n            Invoke-MgDeviceManagementManagedDeviceSyncDevice -ManagedDeviceId $Device.Id\n            Write-Host \"Sync forcee : $Name ($($Device.Id))\" -ForegroundColor Green\n        } catch {\n            Write-Error \"Erreur pour $Name : $_\"\n        }\n    }\n}"
+  },
+  {
+    "id": "intune4",
+    "cat": "intune",
+    "title": "Rapport appareils non conformes",
+    "desc": "Identifie tous les appareils non conformes aux politiques Intune avec détail des raisons de non-conformité.",
+    "tags": [
+      "conformité",
+      "audit",
+      "rapport"
+    ],
+    "code": "function Get-IntuneNonCompliantDevices {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\NonConformes_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Devices = Get-MgDeviceManagementManagedDevice -All |\n               Where-Object { $_.ComplianceState -ne \"compliant\" }\n\n    $Rapport = $Devices | ForEach-Object {\n        $States = Get-MgDeviceManagementManagedDeviceCompliancePolicyState `\n            -ManagedDeviceId $_.Id -ErrorAction SilentlyContinue\n        $Raisons = ($States | Where-Object State -ne \"compliant\" |\n            ForEach-Object { $_.DisplayName }) -join \"; \"\n\n        [PSCustomObject]@{\n            Nom            = $_.DeviceName\n            Utilisateur    = $_.UserPrincipalName\n            OS             = $_.OperatingSystem\n            Conformite     = $_.ComplianceState\n            DernierCheckIn = $_.LastSyncDateTime\n            RaisonsNC      = $Raisons\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Warning \"$($Rapport.Count) appareil(s) non conformes exportes.\"\n    $Rapport | Format-Table Nom, Conformite, RaisonsNC -AutoSize\n}"
+  },
+  {
+    "id": "intune5",
+    "cat": "intune",
+    "title": "Statut déploiement application Win32",
+    "desc": "Liste le statut d'installation d'une app Win32 Intune sur tous les appareils assignés.",
+    "tags": [
+      "apps",
+      "déploiement",
+      "rapport"
+    ],
+    "code": "function Get-IntuneAppDeploymentStatus {\n    param(\n        [Parameter(Mandatory)][string]$AppName,\n        [string]$Output = \"C:\\\\Logs\\\\AppStatus_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $App = Get-MgDeviceAppManagementMobileApp -Filter \"displayName eq '$AppName'\" |\n           Select-Object -First 1\n\n    if (-not $App) { Write-Error \"Application '$AppName' introuvable.\"; return }\n\n    Write-Host \"App : $($App.DisplayName) [$($App.Id)]\"\n\n    $States = Get-MgDeviceAppManagementMobileAppDeviceStatuses `\n        -MobileAppId $App.Id -All\n\n    $Rapport = $States | ForEach-Object {\n        [PSCustomObject]@{\n            Appareil      = $_.DeviceName\n            Utilisateur   = $_.UserPrincipalName\n            StatutInstall = $_.InstallState\n            DerniereMAJ   = $_.LastSyncDateTime\n            ErrorCode     = $_.ErrorCode\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $OK = ($Rapport | Where-Object StatutInstall -eq \"installed\").Count\n    Write-Host \"Installe : $OK / $($Rapport.Count) appareils.\"\n}"
+  },
+  {
+    "id": "intune6",
+    "cat": "intune",
+    "title": "Wipe / Reset appareil Intune",
+    "desc": "Effectue un wipe complet ou un retire sur un appareil géré Intune avec confirmation obligatoire.",
+    "tags": [
+      "appareils",
+      "wipe",
+      "sécurité"
+    ],
+    "code": "function Invoke-IntuneDeviceWipe {\n    param(\n        [Parameter(Mandatory)][string]$DeviceName,\n        [switch]$KeepUserData,\n        [switch]$Force\n    )\n\n    $Device = Get-MgDeviceManagementManagedDevice `\n        -Filter \"deviceName eq '$DeviceName'\" | Select-Object -First 1\n\n    if (-not $Device) { Write-Error \"Appareil '$DeviceName' introuvable.\"; return }\n\n    Write-Host \"ATTENTION : Operation irreversible sur $DeviceName\" -ForegroundColor Red\n    Write-Host \"Utilisateur : $($Device.UserPrincipalName)\"\n\n    if (-not $Force) {\n        $Confirm = Read-Host \"Taper OUI pour confirmer\"\n        if ($Confirm -ne \"OUI\") { Write-Host \"Annule.\"; return }\n    }\n\n    try {\n        if ($KeepUserData) {\n            Invoke-MgRetireDeviceManagementManagedDevice -ManagedDeviceId $Device.Id\n            Write-Host \"Retire : $DeviceName\" -ForegroundColor Yellow\n        } else {\n            Invoke-MgWipeDeviceManagementManagedDevice -ManagedDeviceId $Device.Id\n            Write-Host \"Wipe complet lance : $DeviceName\" -ForegroundColor Red\n        }\n    } catch {\n        Write-Error \"Erreur wipe : $_\"\n    }\n}"
+  },
+  {
+    "id": "intune7",
+    "cat": "intune",
+    "title": "Rapport profils de configuration",
+    "desc": "Liste tous les profils de configuration Intune avec plateforme, type et nombre d'appareils assignés.",
+    "tags": [
+      "configuration",
+      "profils",
+      "rapport"
+    ],
+    "code": "function Get-IntuneConfigProfileReport {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ConfigProfiles_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Profiles = Get-MgDeviceManagementDeviceConfiguration -All\n\n    $Rapport = $Profiles | ForEach-Object {\n        $Assignments = Get-MgDeviceManagementDeviceConfigurationAssignment `\n            -DeviceConfigurationId $_.Id -ErrorAction SilentlyContinue\n\n        [PSCustomObject]@{\n            Nom           = $_.DisplayName\n            Plateforme    = $_.AdditionalProperties[\"@odata.type\"] -replace \"#microsoft.graph.\",\"\"\n            Description   = $_.Description\n            NbAssignments = $Assignments.Count\n            CreeLe        = $_.CreatedDateTime\n            ModifieLe     = $_.LastModifiedDateTime\n            Id            = $_.Id\n        }\n    }\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) profils exportes vers $Output\"\n    $Rapport | Format-Table Nom, Plateforme, NbAssignments -AutoSize\n}"
+  },
+  {
+    "id": "intune8",
+    "cat": "intune",
+    "title": "Assigner une policy Intune à un groupe",
+    "desc": "Assigne une politique de conformité ou de configuration Intune à un groupe Entra ID.",
+    "tags": [
+      "policy",
+      "groupes",
+      "assignation"
+    ],
+    "code": "function Add-IntunePolicyAssignment {\n    param(\n        [Parameter(Mandatory)][string]$PolicyId,\n        [Parameter(Mandatory)][string]$GroupId,\n        [string]$PolicyType = \"compliancePolicy\"\n    )\n\n    $Assignment = @{\n        target = @{\n            \"@odata.type\" = \"#microsoft.graph.groupAssignmentTarget\"\n            groupId       = $GroupId\n        }\n    }\n\n    try {\n        switch ($PolicyType) {\n            \"compliancePolicy\" {\n                New-MgDeviceManagementDeviceCompliancePolicyAssignment `\n                    -DeviceCompliancePolicyId $PolicyId `\n                    -BodyParameter $Assignment\n            }\n            \"configurationPolicy\" {\n                New-MgDeviceManagementDeviceConfigurationAssignment `\n                    -DeviceConfigurationId $PolicyId `\n                    -BodyParameter $Assignment\n            }\n        }\n        Write-Host \"Policy $PolicyId assignee au groupe $GroupId.\" -ForegroundColor Green\n    } catch {\n        Write-Error \"Erreur assignation : $_\"\n    }\n}"
+  },
+  {
+    "id": "intune9",
+    "cat": "intune",
+    "title": "Créer un script de remédiation Intune",
+    "desc": "Crée et déploie un script de détection + remédiation Intune (Proactive Remediation) via Graph API.",
+    "tags": [
+      "remédiation",
+      "scripts",
+      "proactive"
+    ],
+    "code": "function New-IntuneRemediationScript {\n    param(\n        [Parameter(Mandatory)][string]$Nom,\n        [Parameter(Mandatory)][string]$DetectionScriptPath,\n        [Parameter(Mandatory)][string]$RemediationScriptPath,\n        [string]$Publisher = \"IT Admin\",\n        [string]$RunAs     = \"system\"\n    )\n\n    $DetB64 = [Convert]::ToBase64String(\n        [System.Text.Encoding]::UTF8.GetBytes((Get-Content $DetectionScriptPath -Raw))\n    )\n    $RemB64 = [Convert]::ToBase64String(\n        [System.Text.Encoding]::UTF8.GetBytes((Get-Content $RemediationScriptPath -Raw))\n    )\n\n    $Body = @{\n        displayName              = $Nom\n        publisher                = $Publisher\n        runAs32Bit               = $false\n        runAsAccount             = $RunAs\n        detectionScriptContent   = $DetB64\n        remediationScriptContent = $RemB64\n        enforceSignatureCheck    = $false\n    } | ConvertTo-Json\n\n    try {\n        $R = Invoke-MgGraphRequest -Method POST `\n            -Uri \"deviceManagement/deviceHealthScripts\" `\n            -Body $Body `\n            -ContentType \"application/json\"\n        Write-Host \"Script '$Nom' cree : $($R.id)\" -ForegroundColor Green\n        return $R\n    } catch {\n        Write-Error \"Erreur : $_\"\n    }\n}"
+  },
+  {
+    "id": "intune10",
+    "cat": "intune",
+    "title": "Rapport applications installées par appareil",
+    "desc": "Génère un inventaire de toutes les applications détectées sur un appareil Intune géré.",
+    "tags": [
+      "apps",
+      "inventaire",
+      "rapport"
+    ],
+    "code": "function Get-IntuneInstalledAppsReport {\n    param(\n        [Parameter(Mandatory)][string]$DeviceName,\n        [string]$Output = \"C:\\\\Logs\\\\Apps_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Device = Get-MgDeviceManagementManagedDevice `\n        -Filter \"deviceName eq '$DeviceName'\" | Select-Object -First 1\n\n    if (-not $Device) { Write-Error \"Appareil '$DeviceName' introuvable.\"; return }\n\n    $Apps = Get-MgDeviceManagementManagedDeviceDetectedApp `\n        -ManagedDeviceId $Device.Id -All\n\n    $Rapport = $Apps | ForEach-Object {\n        [PSCustomObject]@{\n            Application = $_.DisplayName\n            Version     = $_.Version\n            TailleOctets= $_.SizeInByte\n            Editeur     = $_.Publisher\n        }\n    } | Sort-Object Application\n\n    $Rapport | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    Write-Host \"$($Rapport.Count) applications trouvees sur $DeviceName.\"\n}"
+  },
+  {
+    "id": "intune11",
+    "cat": "intune",
+    "title": "Autopilot — Importer des appareils",
+    "desc": "Importe des appareils dans Windows Autopilot depuis un fichier CSV (hash matériel) via Graph API.",
+    "tags": [
+      "autopilot",
+      "import",
+      "déploiement"
+    ],
+    "code": "function Import-AutopilotDevices {\n    param(\n        [Parameter(Mandatory)][string]$CSVPath\n        # CSV : Device Serial Number, Windows Product ID, Hardware Hash\n    )\n\n    $Devices = Import-Csv -Path $CSVPath\n\n    $Results = foreach ($D in $Devices) {\n        $Body = @{\n            \"@odata.type\"      = \"#microsoft.graph.importedWindowsAutopilotDeviceIdentity\"\n            serialNumber       = $D.\"Device Serial Number\"\n            productKey         = $D.\"Windows Product ID\"\n            hardwareIdentifier = $D.\"Hardware Hash\"\n        } | ConvertTo-Json\n\n        try {\n            $R = Invoke-MgGraphRequest -Method POST `\n                -Uri \"deviceManagement/importedWindowsAutopilotDeviceIdentities\" `\n                -Body $Body -ContentType \"application/json\"\n            [PSCustomObject]@{ Serial=$D.\"Device Serial Number\"; Status=\"Importe\"; Id=$R.id }\n        } catch {\n            [PSCustomObject]@{ Serial=$D.\"Device Serial Number\"; Status=\"ERREUR\"; Detail=$_.Exception.Message }\n        }\n    }\n\n    $Results | Format-Table -AutoSize\n    Write-Host \"Importes : $(($Results|Where-Object Status -eq 'Importe').Count) / $($Results.Count)\"\n}"
+  },
+  {
+    "id": "intune12",
+    "cat": "intune",
+    "title": "Rapport conformité par OS",
+    "desc": "Résumé de conformité Intune regroupé par système d'exploitation avec statistiques et taux.",
+    "tags": [
+      "conformité",
+      "rapport",
+      "OS"
+    ],
+    "code": "function Get-IntuneComplianceSummaryByOS {\n    param(\n        [string]$Output = \"C:\\\\Logs\\\\ComplianceSummary_$(Get-Date -f yyyyMMdd).csv\"\n    )\n\n    $Devices = Get-MgDeviceManagementManagedDevice -All\n\n    $Summary = $Devices |\n        Group-Object OperatingSystem |\n        ForEach-Object {\n            $G   = $_.Group\n            $Tot = $G.Count\n            $OK  = ($G | Where-Object ComplianceState -eq \"compliant\").Count\n            $Pct = if ($Tot -gt 0) { [math]::Round($OK/$Tot*100,1) } else { 0 }\n\n            [PSCustomObject]@{\n                OS             = $_.Name\n                TotalAppareils = $Tot\n                Conformes      = $OK\n                NonConformes   = $Tot - $OK\n                TauxConformite = \"$Pct%\"\n            }\n        } | Sort-Object TotalAppareils -Descending\n\n    $Summary | Export-Csv -Path $Output -NoTypeInformation -Encoding UTF8\n    $Summary | Format-Table -AutoSize\n    Write-Host \"Rapport genere : $Output\"\n}"
   }
 ]
